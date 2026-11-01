@@ -2,6 +2,7 @@
 """Offline, frame-counted walkthrough assembly. No network or capture driver."""
 from __future__ import annotations
 import argparse
+import functools
 import hashlib
 import json
 import math
@@ -9,11 +10,12 @@ import re
 import shutil
 import subprocess
 import tempfile
+import unicodedata
 from pathlib import Path
 
 
 def command(args):
-    result = subprocess.run([str(a) for a in args], capture_output=True, text=True)
+    result = subprocess.run([str(a) for a in args], capture_output=True, text=True, encoding="utf-8", errors="replace")
     if result.returncode:
         raise ValueError(f"{Path(str(args[0])).name} failed: {result.stderr[-1800:]}")
     return result.stdout
@@ -24,7 +26,7 @@ def probe(path):
 
 
 def audio_peak(path):
-    check = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(path), "-af", "volumedetect", "-vn", "-sn", "-dn", "-f", "null", "-"], capture_output=True, text=True)
+    check = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(path), "-af", "volumedetect", "-vn", "-sn", "-dn", "-f", "null", "-"], capture_output=True, text=True, encoding="utf-8", errors="replace")
     peak = re.search(r"max_volume: (-?(?:[0-9.]+|inf)) dB", check.stderr)
     if check.returncode or not peak:
         raise ValueError("Could not measure narration audio")
@@ -56,7 +58,7 @@ def asset(root, name):
 
 def prepare(plan_path, silent_preview=False):
     root = plan_path.resolve().parent
-    plan = json.loads(plan_path.read_text())
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
     if plan.get("version") != 1:
         raise ValueError("Expected plan version 1")
     width, height, fps = plan.get("width", 1920), plan.get("height", 1080), plan.get("fps", 30)
@@ -140,8 +142,10 @@ def prepare(plan_path, silent_preview=False):
         title = s.get("title", f"Scene {i}")
         if not isinstance(title, str) or not 1 <= len(title) <= 90:
             raise ValueError(f"Scene {i}: title must have 1 to 90 characters")
-        if not font and any(ord(c) > 255 for c in title + "".join(c["text"] for c in captions)):
-            raise ValueError("Supply a suitably licensed font for this script; inspect shaping in the result")
+        missing = missing_glyphs(title + "".join(c["text"] for c in captions), font)
+        if missing:
+            raise ValueError(f"Scene {i}: the {'supplied' if font else 'default'} font has no glyph for {' '.join(missing[:8])}; "
+                             "set \"font\" to a suitably licensed font that covers this text and inspect shaping in the result")
         if any('\u0600' <= c <= '\u06ff' for c in title + ''.join(c['text'] for c in captions)):
             from PIL import features
             if not features.check('raqm'):
@@ -156,6 +160,23 @@ def subtitle_time(seconds):
     m, ms = divmod(ms, 60000)
     s, ms = divmod(ms, 1000)
     return f"{h:02}:{m:02}:{s:02},{ms:03}"
+
+
+@functools.lru_cache(maxsize=8)
+def _glyph_probe(font_path):
+    from PIL import ImageFont
+    font = ImageFont.truetype(str(font_path), 32) if font_path else ImageFont.load_default(size=32)
+    def shape(ch):
+        mask = font.getmask(ch)
+        return mask.size, bytes(mask)
+    return shape, shape("￿")
+
+
+def missing_glyphs(text, font_path):
+    """Characters the font would draw as its missing-glyph box. Pillow's default font lacks even é and —."""
+    shape, notdef = _glyph_probe(font_path)
+    # Combining marks and format characters are drawn with their base; they cannot be judged alone.
+    return sorted({ch for ch in text if not ch.isspace() and unicodedata.category(ch)[0] not in "MC" and shape(ch) == notdef})
 
 
 def caption_lines(text, measure, max_width):
@@ -246,7 +267,7 @@ def render(plan_path, destination, silent_preview=False):
                 last = name
             entries += [f"file '{last}'", f"option framerate {fps}"]
             listing = work / f"plates-{i}.ffconcat"
-            listing.write_text("\n".join(entries) + "\n")
+            listing.write_text("\n".join(entries) + "\n", encoding="utf-8")
             inputs += ["-f", "concat", "-safe", "0", "-i", listing]
             plate_index = input_index
             input_index += 1
@@ -275,9 +296,9 @@ def render(plan_path, destination, silent_preview=False):
         filters.append("".join(concat) + f"concat=n={len(scenes)}:v=1:a=1[v][voice]")
         filters.append("[voice]loudnorm=I=-18:TP=-2:LRA=11,aresample=48000[a]" if any(s["audio"] for s in scenes) else "[voice]anull[a]")
         graph = work / "graph.txt"
-        graph.write_text(";\n".join(filters))
+        graph.write_text(";\n".join(filters), encoding="utf-8")
         final = work / ("silent-preview.mp4" if silent_preview else "walkthrough.mp4")
-        command(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex_threads", "1", "-filter_complex", graph.read_text(), "-map", "[v]", "-map", "[a]", "-map_metadata", "-1", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-r", fps, "-c:a", "aac", "-ar", "48000", "-b:a", "160k", "-movflags", "+faststart", final])
+        command(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex_threads", "1", "-filter_complex", graph.read_text(encoding="utf-8"), "-map", "[v]", "-map", "[a]", "-map_metadata", "-1", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-r", fps, "-c:a", "aac", "-ar", "48000", "-b:a", "160k", "-movflags", "+faststart", final])
         command(["ffmpeg", "-v", "error", "-i", final, "-f", "null", "-"])
         actual = probe(final)
         vs = next(x for x in actual["streams"] if x["codec_type"] == "video")
@@ -286,10 +307,10 @@ def render(plan_path, destination, silent_preview=False):
         package = work / "result"
         package.mkdir()
         shutil.move(final, package / final.name)
-        (package / "captions.srt").write_text("\n".join(srt))
-        (package / "narration.txt").write_text("\n\n".join(f"{i+1}. {s['source']['title']}\n{s['source'].get('say', '')}" for i, s in enumerate(scenes)) + "\n")
+        (package / "captions.srt").write_text("\n".join(srt), encoding="utf-8")
+        (package / "narration.txt").write_text("\n\n".join(f"{i+1}. {s['source']['title']}\n{s['source'].get('say', '')}" for i, s in enumerate(scenes)) + "\n", encoding="utf-8")
         # No local filesystem paths or audio credentials are written to the receipt.
-        (package / "evidence.json").write_text(json.dumps({"version": 1, "preview": silent_preview, "voice":plan.get('voice'), "videoSha256":digest(package/final.name), "planSha256": digest(plan_path), "fontSha256": digest(font) if font else None, "fps": fps, "frames": sum(s["frames"] for s in scenes), "scenes": receipt, "checks": {"decode": "passed", "frameCount": "passed", "visualReview": "pending", "narrationReview": "pending", "fullPlayback": "pending"}}, indent=2))
+        (package / "evidence.json").write_text(json.dumps({"version": 1, "preview": silent_preview, "voice":plan.get('voice'), "videoSha256":digest(package/final.name), "planSha256": digest(plan_path), "fontSha256": digest(font) if font else None, "fps": fps, "frames": sum(s["frames"] for s in scenes), "scenes": receipt, "checks": {"decode": "passed", "frameCount": "passed", "visualReview": "pending", "narrationReview": "pending", "fullPlayback": "pending"}}, indent=2), encoding="utf-8")
         shutil.move(package, destination)
     return destination
 

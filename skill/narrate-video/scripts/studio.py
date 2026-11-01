@@ -9,7 +9,7 @@ from render import asset, probe, digest
 
 
 def build(spec_path, output):
-    root=spec_path.resolve().parent; spec=json.loads(spec_path.read_text())
+    root=spec_path.resolve().parent; spec=json.loads(spec_path.read_text(encoding='utf-8'))
     if output.exists(): raise ValueError('Audition output exists')
     takes=spec.get('takes',[])
     if not takes: raise ValueError('Provide approved audition takes')
@@ -50,7 +50,7 @@ const a=document.createElement('a');a.href=u;a.download='voice-choice.json';a.cl
     output.mkdir(parents=True)
     try:
         for source,name in files:shutil.copyfile(source,output/name)
-        (output/'index.html').write_text(page)
+        (output/'index.html').write_text(page,encoding='utf-8')
     except Exception:
         shutil.rmtree(output);raise
 

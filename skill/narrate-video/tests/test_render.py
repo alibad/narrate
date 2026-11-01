@@ -39,7 +39,7 @@ class RenderTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def save(self):
-        self.path.write_text(json.dumps(self.plan))
+        self.path.write_text(json.dumps(self.plan), encoding="utf-8")
 
     def prepare(self, **kwargs):
         self.save()
@@ -76,14 +76,27 @@ class RenderTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "finite"):
             self.prepare()
 
-    def test_rejects_path_escape_and_symlink(self):
+    def test_rejects_path_escape(self):
         self.plan["scenes"][0]["visual"] = "../outside.png"
         with self.assertRaisesRegex(ValueError, "escapes"):
             self.prepare()
-        (self.root / "outside-link").symlink_to(SCRIPT)
+
+    def test_rejects_symlink_escape(self):
+        try:
+            (self.root / "outside-link").symlink_to(SCRIPT)
+        except OSError:
+            self.skipTest("this account cannot create symlinks (Windows without Developer Mode)")
         self.plan["scenes"][0]["visual"] = "outside-link"
         with self.assertRaisesRegex(ValueError, "escapes"):
             self.prepare()
+
+    def test_utf8_plan_and_missing_default_glyphs_fail_clearly(self):
+        # Pillow's built-in font has no é or em dash; that must stop the render, not draw boxes.
+        self.plan["scenes"][0]["captions"][0]["text"] = "Un café — merci."
+        with self.assertRaisesRegex(ValueError, "default font has no glyph for .*é"):
+            self.prepare()
+        self.plan["scenes"][0]["captions"][0]["text"] = "It’s “ready”."
+        self.prepare()
 
     def test_rejects_observed_without_evidence(self):
         self.plan["scenes"][0]["status"] = "observed"
@@ -95,10 +108,10 @@ class RenderTests(unittest.TestCase):
         self.save()
         dest = self.root / "preview"
         r.render(self.path, dest, silent_preview=True)
-        receipt = json.loads((dest / "evidence.json").read_text())
+        receipt = json.loads((dest / "evidence.json").read_text(encoding="utf-8"))
         self.assertTrue(receipt["preview"])
         self.assertEqual(receipt["frames"], 60)
-        self.assertNotIn(str(self.root), (dest / "evidence.json").read_text())
+        self.assertNotIn(str(self.root), (dest / "evidence.json").read_text(encoding="utf-8"))
         with self.assertRaisesRegex(ValueError, "already exists"):
             r.render(self.path, dest, silent_preview=True)
 
@@ -115,7 +128,7 @@ class RenderTests(unittest.TestCase):
         self.save()
         dest = self.root / "final"
         r.render(self.path, dest)
-        receipt = json.loads((dest / "evidence.json").read_text())
+        receipt = json.loads((dest / "evidence.json").read_text(encoding="utf-8"))
         self.assertEqual(receipt["frames"], 120)
         self.assertEqual(receipt["checks"]["fullPlayback"], "pending")
         video = dest / "walkthrough.mp4"

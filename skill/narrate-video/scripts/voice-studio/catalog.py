@@ -2,7 +2,7 @@
 import json,os,platform
 from pathlib import Path
 HERE=Path(__file__).parent
-LANGUAGES={x['code']:x for x in json.loads((HERE/'languages.json').read_text())}
+LANGUAGES={x['code']:x for x in json.loads((HERE/'languages.json').read_text(encoding='utf-8'))}
 MODELS={
  'omnivoice':dict(label='OmniVoice',tagline='One voice across many languages',repo='mlx-community/OmniVoice-bf16',revision='8fb0b754cad788aaefec690cd55c207e8a628f85',bytes=1639492513,languages=list(LANGUAGES),cloning=True,source='https://github.com/k2-fsa/OmniVoice',details='Broad language coverage, including the Arabic varieties offered here. Already used locally with voice references. Audition each selected language.',verification='Reference-conditioned generation tested locally'),
  'chatterbox':dict(label='Chatterbox Multilingual',tagline='A smaller multilingual alternative',repo='mlx-community/chatterbox-8bit',revision='9617d61b596a03d1bed766a28c341680e993a1b9',bytes=1427734984,dependencies=[dict(repo='mlx-community/S3TokenizerV2',revision='e0c9886f0e1c35ae85b1f27277416fb19fc72bec',bytes=494869110)],languages='ar da de el en es fi fr he hi it ja ko ms nl no pl pt ru sv sw tr zh'.split(),cloning=True,source='https://huggingface.co/mlx-community/chatterbox-8bit',details='23 declared languages and reference-voice conditioning. Includes its required speech tokenizer in the setup size. Compare an audition before choosing.',verification='English and Arabic reference-conditioned speech generated locally; listening approval is yours'),

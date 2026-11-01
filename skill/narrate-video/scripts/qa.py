@@ -21,7 +21,7 @@ def compare(expected, heard):
 
 def inspect(video, evidence, output, transcript=None):
     if output.exists(): raise ValueError('QA output exists')
-    data=json.loads(evidence.read_text()); info=probe(video)
+    data=json.loads(evidence.read_text(encoding='utf-8')); info=probe(video)
     if data.get('videoSha256')!=digest(video): raise ValueError('Evidence does not match this export')
     output.mkdir(parents=True)
     command(['ffmpeg','-v','error','-i',video,'-f','null','-'])
@@ -41,19 +41,19 @@ def inspect(video, evidence, output, transcript=None):
     for i,thumb in enumerate(thumbs):sheet.paste(thumb,((i%4)*390,(i//4)*720))
     sheet.save(output/'contact-sheet.jpg')
     import subprocess
-    p=subprocess.run(['ffmpeg','-hide_banner','-i',str(video),'-af','loudnorm=I=-18:TP=-1.5:LRA=11:print_format=json','-f','null','-'],capture_output=True,text=True)
+    p=subprocess.run(['ffmpeg','-hide_banner','-i',str(video),'-af','loudnorm=I=-18:TP=-1.5:LRA=11:print_format=json','-f','null','-'],capture_output=True,text=True,encoding='utf-8',errors='replace')
     match=re.search(r'\{\s*"input_i".*?\}',p.stderr,re.S)
     if p.returncode or not match: raise ValueError('Loudness measurement failed')
     loudness=json.loads(match.group())
     report=dict(videoSha256=digest(video),decode='passed',probe=info,loudness=loudness,
                 audioTranscript='pending',visualReview='pending',captionAlignment='pending',fullPlayback='pending')
     if transcript:
-        text=(video.parent/'narration.txt').read_text()
+        text=(video.parent/'narration.txt').read_text(encoding='utf-8')
         # Renderer headings occupy separate numbered lines; exclude them from expected speech.
         text='\n'.join(line for line in text.splitlines() if not re.match(r'^\d+\. ',line))
-        report['audioTranscript']=compare(text,transcript.read_text())
+        report['audioTranscript']=compare(text,transcript.read_text(encoding='utf-8'))
         report['transcriptSha256']=digest(transcript)
-    (output/'qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+    (output/'qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     return report
 
 

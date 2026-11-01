@@ -20,20 +20,20 @@ class PolicyTests(unittest.TestCase):
   old=os.environ.pop('NARRATE_VIDEO_MODEL_DIR',None)
   try:
    for name in ['chatterbox','omnivoice']:
-    p=self.root/'models'/name;p.mkdir(parents=True);(p/'config.json').write_text('{}');(p/'model.safetensors').write_bytes(b'fixture')
+    p=self.root/'models'/name;p.mkdir(parents=True);(p/'config.json').write_text('{}',encoding='utf-8');(p/'model.safetensors').write_bytes(b'fixture')
     if name=='omnivoice':(p/'audio_tokenizer').mkdir();(p/'audio_tokenizer/model.safetensors').write_bytes(b'fixture')
     else:
-     d=MODELS[name]['dependencies'][0];cache=self.root/'model-hub'/('models--'+d['repo'].replace('/','--'));snap=cache/'snapshots'/d['revision'];snap.mkdir(parents=True);(snap/'model.safetensors').write_bytes(b'fixture');(cache/'refs').mkdir();(cache/'refs/main').write_text(d['revision'])
+     d=MODELS[name]['dependencies'][0];cache=self.root/'model-hub'/('models--'+d['repo'].replace('/','--'));snap=cache/'snapshots'/d['revision'];snap.mkdir(parents=True);(snap/'model.safetensors').write_bytes(b'fixture');(cache/'refs').mkdir();(cache/'refs/main').write_text(d['revision'],encoding='utf-8')
    self.assertEqual(recommend(['en','ar'],self.root,'reuse','omnivoice')['recommended'],'omnivoice')
   finally:
    if old is not None:os.environ['NARRATE_VIDEO_MODEL_DIR']=old
  def test_chatterbox_requires_its_separate_tokenizer(self):
-  p=self.root/'models/chatterbox';p.mkdir(parents=True);(p/'config.json').write_text('{}');(p/'model.safetensors').write_bytes(b'fixture')
+  p=self.root/'models/chatterbox';p.mkdir(parents=True);(p/'config.json').write_text('{}',encoding='utf-8');(p/'model.safetensors').write_bytes(b'fixture')
   self.assertFalse(installed('chatterbox',self.root))
-  d=MODELS['chatterbox']['dependencies'][0];cache=self.root/'model-hub'/('models--'+d['repo'].replace('/','--'));snapshot=cache/'snapshots'/d['revision'];snapshot.mkdir(parents=True);(snapshot/'model.safetensors').write_bytes(b'fixture');(cache/'refs').mkdir();(cache/'refs/main').write_text(d['revision'])
+  d=MODELS['chatterbox']['dependencies'][0];cache=self.root/'model-hub'/('models--'+d['repo'].replace('/','--'));snapshot=cache/'snapshots'/d['revision'];snapshot.mkdir(parents=True);(snapshot/'model.safetensors').write_bytes(b'fixture');(cache/'refs').mkdir();(cache/'refs/main').write_text(d['revision'],encoding='utf-8')
   self.assertTrue(installed('chatterbox',self.root))
  def test_qwen_requires_its_speech_tokenizer(self):
-  p=self.root/'models/qwen3-base';p.mkdir(parents=True);(p/'config.json').write_text('{}');(p/'model.safetensors').write_bytes(b'fixture');self.assertFalse(installed('qwen3-base',self.root))
+  p=self.root/'models/qwen3-base';p.mkdir(parents=True);(p/'config.json').write_text('{}',encoding='utf-8');(p/'model.safetensors').write_bytes(b'fixture');self.assertFalse(installed('qwen3-base',self.root))
  def test_invalid_language_and_empty_selection_fail(self):
   for codes in [[],['made-up'],['en']*13]:
    with self.assertRaises(ValueError):validate_languages(codes)

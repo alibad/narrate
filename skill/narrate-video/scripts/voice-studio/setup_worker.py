@@ -9,4 +9,4 @@ if __name__=='__main__':
  for dep in m.get('dependencies',[]):
   cache=Path(os.environ['HF_HUB_CACHE']);snapshot_download(dep['repo'],revision=dep['revision'],cache_dir=cache,allow_patterns=['config.json','model.safetensors'])
   # The upstream loader asks for main. Pin that alias inside this private model cache.
-  refs=cache/('models--'+dep['repo'].replace('/','--'))/'refs';refs.mkdir(parents=True,exist_ok=True);(refs/'main').write_text(dep['revision'])
+  refs=cache/('models--'+dep['repo'].replace('/','--'))/'refs';refs.mkdir(parents=True,exist_ok=True);(refs/'main').write_text(dep['revision'],encoding='utf-8')

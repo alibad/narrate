@@ -6,7 +6,7 @@ def post(path,body):
  req=urllib.request.Request(ENDPOINT+path,json.dumps(body,ensure_ascii=False).encode(),{'Content-Type':'application/json'})
  try:return json.load(urllib.request.urlopen(req,timeout=600))
  except urllib.error.HTTPError as e:raise RuntimeError(e.read().decode())
-items=json.loads((ROOT/'content/gallery.json').read_text())
+items=json.loads((ROOT/'content/gallery.json').read_text(encoding='utf-8'))
 post('/api/setup',dict(model='omnivoice',languages=[x['id']for x in items],preference='reuse'))
 for _ in range(180):
  s=json.load(urllib.request.urlopen(ENDPOINT+'/api/status'))['setup']
@@ -24,5 +24,5 @@ for item in items:
   assert result['engine']=='omnivoice'and result['cloned']and result['from_recording']==ref and result['language']==code
   audio=urllib.request.urlopen(ENDPOINT+result['url']).read();wav.write_bytes(audio)
   result.update(audioSha256=hashlib.sha256(audio).hexdigest(),review='private draft; listening approval pending',crossLanguageReference=ref!=code)
-  receipt.write_text(json.dumps(result,ensure_ascii=False,indent=2));print(code,n,result['seconds'],flush=True)
+  receipt.write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8');print(code,n,result['seconds'],flush=True)
 print('All thirty speech phrases generated for private review.',flush=True)

@@ -24,14 +24,14 @@ class VoiceTests(unittest.TestCase):
             with wave.open(str(self.root/f'{i}.wav'),'wb') as w:
                 w.setnchannels(1);w.setsampwidth(2);w.setframerate(48000)
                 w.writeframes(b''.join(struct.pack('<h',round(5000*math.sin(n*2*math.pi*300/48000)))for n in range(round(seconds*48000))))
-        self.text=self.root/'text.txt';self.text.write_text('Exact test phrase.')
+        self.text=self.root/'text.txt';self.text.write_text('Exact test phrase.',encoding='utf-8')
         self.cfg=self.root/'config.json'
 
     def tearDown(self):self.tmp.cleanup()
 
     def config(self,command):
         cfg=dict(provider='synthetic-test',model='tone-fixture',revision='1',network='none',languages=['en'],voices=['fixture'],command=command)
-        self.cfg.write_text(json.dumps(cfg));return cfg
+        self.cfg.write_text(json.dumps(cfg),encoding='utf-8');return cfg
 
     def test_unsupported_language_never_invokes_provider(self):
         marker=self.root/'invoked'
@@ -52,7 +52,7 @@ class VoiceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'exists'):synthesize(self.cfg,self.text,out,'en','fixture')
 
     def test_phrase_boundaries_follow_audio_duration(self):
-        spec=self.root/'phrases.json';spec.write_text(json.dumps({'phrases':[{'audio':'0.wav','text':'First phrase.'},{'audio':'1.wav','text':'Second phrase.'}]}))
+        spec=self.root/'phrases.json';spec.write_text(json.dumps({'phrases':[{'audio':'0.wav','text':'First phrase.'},{'audio':'1.wav','text':'Second phrase.'}]}),encoding='utf-8')
         result=compose(spec,self.root/'composed')
         self.assertAlmostEqual(result['captions'][1]['start'],.4,places=5)
         self.assertAlmostEqual(result['captions'][1]['end'],1.1,places=5)
@@ -64,9 +64,9 @@ class VoiceTests(unittest.TestCase):
         self.assertTrue(compare('Save the file.','save the file!')['exactOrderedMatch'])
 
     def test_audition_escapes_content_and_keeps_audio(self):
-        spec=self.root/'audition.json';spec.write_text(json.dumps({'takes':[dict(name='<unsafe>',provider='test',model='tone',revision='1',language='en',text='Synthetic tone, not speech.',audio='0.wav')]}))
+        spec=self.root/'audition.json';spec.write_text(json.dumps({'takes':[dict(name='<unsafe>',provider='test',model='tone',revision='1',language='en',text='Synthetic tone, not speech.',audio='0.wav')]}),encoding='utf-8')
         out=self.root/'studio';build(spec,out)
-        text=(out/'index.html').read_text()
+        text=(out/'index.html').read_text(encoding='utf-8')
         self.assertIn('&lt;unsafe&gt;',text);self.assertNotIn('<unsafe>',text)
         self.assertEqual((out/'take-0.wav').read_bytes(),(self.root/'0.wav').read_bytes())
 

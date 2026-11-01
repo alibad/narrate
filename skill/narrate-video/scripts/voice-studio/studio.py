@@ -15,9 +15,9 @@ LOCK=threading.RLock();JOB_LOCK=threading.Lock();JOB={'state':'idle'}
 def now():return datetime.now(timezone.utc).isoformat()
 def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 def atomic_json(path,data):
- path.parent.mkdir(parents=True,exist_ok=True);tmp=path.with_name(path.name+'.'+uuid.uuid4().hex+'.tmp');tmp.write_text(json.dumps(data,ensure_ascii=False,indent=2));os.replace(tmp,path)
+ path.parent.mkdir(parents=True,exist_ok=True);tmp=path.with_name(path.name+'.'+uuid.uuid4().hex+'.tmp');tmp.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8');os.replace(tmp,path)
 def config():
- try:c=json.loads(CONFIG.read_text())
+ try:c=json.loads(CONFIG.read_text(encoding='utf-8'))
  except(OSError,ValueError):c={}
  saved=[x.stem for x in VOICES.glob('*.wav')if x.stem in LANGUAGES]if VOICES.exists()else[]
  return {'engine':'omnivoice','languages':saved or ['en'],'preference':'reuse','references':{},'accepted':{},**c,'provider':'local','voice':'mine'}
@@ -34,7 +34,7 @@ def references():
    if p.is_file():
     try:secs=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',str(p)],stderr=subprocess.DEVNULL))
     except Exception:secs=0
-    result[code]=dict(language=code,name=LANGUAGES[code]['name'],url=f'/me/{code}.wav?v={p.stat().st_mtime_ns}',text=t.read_text()if t.exists()else'',seconds=round(secs,1),sha256=sha(p))
+    result[code]=dict(language=code,name=LANGUAGES[code]['name'],url=f'/me/{code}.wav?v={p.stat().st_mtime_ns}',text=t.read_text(encoding='utf-8')if t.exists()else'',seconds=round(secs,1),sha256=sha(p))
  return result
 
 def state():
@@ -43,7 +43,7 @@ def state():
  auditions={}
  for path in sorted(OUT.glob('*.json'),key=lambda p:p.stat().st_mtime):
   try:
-   a=json.loads(path.read_text())
+   a=json.loads(path.read_text(encoding='utf-8'))
    if a.get('id')and a.get('language')in c['languages']and a.get('engine')==c['engine']:auditions[a['language']]=a
   except (OSError,ValueError):pass
  return dict(version=2,config=c,languages=list(LANGUAGES.values()),mine=references(),plan=plan,setup=job,auditions=auditions,engines={k:dict(label=v['label'],repo=v['repo'],langs=v['languages'],clone=True)for k,v in MODELS.items()})
@@ -103,7 +103,7 @@ def generate(req):
  if not 1<=len(text)<=2400:raise ValueError('Enter between 1 and 2400 characters.')
  with tempfile.TemporaryDirectory(prefix='voice-request-',dir=OUT)as td:
   with LOCK:
-   code=selected_reference(lang,req,c);source=VOICES/f'{code}.wav';ref=Path(td)/'reference.wav';shutil.copyfile(source,ref);reftext=(VOICES/f'{code}.txt').read_text()
+   code=selected_reference(lang,req,c);source=VOICES/f'{code}.wav';ref=Path(td)/'reference.wav';shutil.copyfile(source,ref);reftext=(VOICES/f'{code}.txt').read_text(encoding='utf-8')
   token=uuid.uuid4().hex;out=OUT/f'{token}-{name}-{lang}.wav';result=speak(name,lang,text,str(out),str(ref),reftext,DATA)
   result.update(id=token,url=f'/out/{out.name}',file=out.name,from_recording=code,referenceSha256=sha(ref),text=text,createdAt=now())
   atomic_json(out.with_suffix('.json'),result)
@@ -149,7 +149,7 @@ class Handler(BaseHTTPRequestHandler):
        history=DATA/'voice-history'/str(time.time_ns());history.mkdir(parents=True);shutil.copyfile(target,history/target.name)
        old=VOICES/f'{lang}.txt'
        if old.exists():shutil.copyfile(old,history/old.name)
-      pending=target.with_name(lang+'.'+uuid.uuid4().hex+'.wav');shutil.copyfile(wav,pending);(VOICES/f'{lang}.txt').write_text(text);os.replace(pending,target)
+      pending=target.with_name(lang+'.'+uuid.uuid4().hex+'.wav');shutil.copyfile(wav,pending);(VOICES/f'{lang}.txt').write_text(text,encoding='utf-8');os.replace(pending,target)
       c=config();refs=c.get('references',{});refs[lang]=lang;save_config(dict(references=refs,profileReady=False))
     return self.json(dict(ok=True,seconds=round(seconds,1),reference=references()[lang]))
    req=json.loads(body)
@@ -170,7 +170,7 @@ class Handler(BaseHTTPRequestHandler):
    if url.path=='/api/accept':
     token=req.get('id');files=list(OUT.glob(f'{token}-*.json'))if isinstance(token,str)and len(token)==32 and all(c in'0123456789abcdef'for c in token)else[]
     if len(files)!=1:raise ValueError('Choose a generated audition first.')
-    r=json.loads(files[0].read_text());c=config();lang=r['language'];ref=selected_reference(lang,{},c)
+    r=json.loads(files[0].read_text(encoding='utf-8'));c=config();lang=r['language'];ref=selected_reference(lang,{},c)
     if r['engine']!=c['engine']or r['referenceSha256']!=sha(VOICES/f'{ref}.wav'):raise ValueError('The model or recording changed. Generate a fresh audition.')
     accepted=c.get('accepted',{});accepted[lang]=dict(id=token,engine=r['engine'],referenceSha256=r['referenceSha256'],acceptedAt=now());save_config(dict(accepted=accepted));return self.json(state())
    if url.path=='/api/finish':
