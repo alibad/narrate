@@ -1,0 +1,4 @@
+interface:
+  display_name: "Narrate"
+  short_description: "Choose languages, record your voice and make narrated demos"
+  default_prompt: "Use $narrate-video to open the language-first voice studio, set up a compatible local cloning model, use my accepted recorded voice, and make a short narrated video with verified playback."

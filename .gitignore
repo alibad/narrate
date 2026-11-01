@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.vercel/
+.env*
+!.env.example
+production/
+**/__pycache__/
+*.pyc
+.DS_Store
+
+# Reference recordings, weights, private transcripts and raw production remain local.

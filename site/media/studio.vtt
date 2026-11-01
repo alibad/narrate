@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:07.200
+Choose the languages you want to narrate in. Narrate checks which local voice models cover all of them.
+
+2
+00:00:07.567 --> 00:00:14.900
+Review the model recommendation and its reasons. You can choose another compatible model before setup.
+
+3
+00:00:15.267 --> 00:00:22.100
+Setup downloads only the selected model and checks that it loads. An existing model can be reused.
+
+4
+00:00:22.467 --> 00:00:29.433
+Reuse a saved voice recording, or record a short passage. The waveform comes from your actual audio.
+
+5
+00:00:29.800 --> 00:00:38.233
+Generate an audition in each language and listen before accepting it. Your recordings and speech stay on your computer.

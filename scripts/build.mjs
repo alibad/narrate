@@ -1,0 +1,20 @@
+import {cp,mkdir,readFile,writeFile,rm} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';import path from 'node:path';import {execFileSync} from 'node:child_process';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+execFileSync('python3',[path.join(root,'scripts/package-skill.py')],{stdio:'inherit'});
+const films=JSON.parse(await readFile(path.join(root,'content/gallery.json'),'utf8'));
+await writeFile(path.join(root,'site/gallery.json'),JSON.stringify(films,null,2));
+await writeFile(path.join(root,'site/manifest.webmanifest'),JSON.stringify({name:'Narrate',short_name:'Narrate',start_url:'/',display:'standalone',background_color:'#f7f5ef',theme_color:'#f7f5ef',icons:[{src:'/assets/brand/mark.svg',sizes:'any',type:'image/svg+xml'},{src:'/assets/brand/apple-icon.png',sizes:'180x180',type:'image/png'}]},null,2));
+const publicUrl=process.env.PUBLIC_SITE_URL?.replace(/\/$/,'');
+if(publicUrl&&!/^https:\/\/[a-z0-9.-]+$/i.test(publicUrl))throw Error('PUBLIC_SITE_URL must be an HTTPS origin');
+await writeFile(path.join(root,'site/robots.txt'),publicUrl?`User-agent: *\nAllow: /\nSitemap: ${publicUrl}/sitemap.xml\n`:'User-agent: *\nDisallow: /\n');
+await writeFile(path.join(root,'site/sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${publicUrl?`<url><loc>${publicUrl}/</loc></url>`:''}</urlset>`);
+await rm(path.join(root,'dist'),{recursive:true,force:true});await mkdir(path.join(root,'dist'));await cp(path.join(root,'site'),path.join(root,'dist'),{recursive:true});
+if(publicUrl){
+ let html=await readFile(path.join(root,'dist/index.html'),'utf8');
+ const structured={"@context":"https://schema.org","@type":"SoftwareApplication",name:"Narrate",applicationCategory:"MultimediaApplication",operatingSystem:"macOS (Apple Silicon for bundled local speech)",url:publicUrl,codeRepository:"https://github.com/alibad/narrate",license:"https://github.com/alibad/narrate/blob/main/LICENSE",description:"A language-first local voice studio and narrated-video skill.",author:{"@type":"Organization",name:"Human Quest",url:"https://www.humanquest.net"},offers:{"@type":"Offer",price:"0",priceCurrency:"USD"}};
+ html=html.replace('<meta property="og:image" content="/assets/brand/social.png">',`<meta property="og:image" content="${publicUrl}/assets/brand/social.png">`);
+ html=html.replace('</head>',`<link rel="canonical" href="${publicUrl}/"><meta property="og:url" content="${publicUrl}/"><script type="application/ld+json">${JSON.stringify(structured)}</script></head>`);
+ await writeFile(path.join(root,'dist/index.html'),html);
+}
+console.log('Static site built. '+films.filter(f=>f.video).length+' playable films; '+films.length+' collection entries.');

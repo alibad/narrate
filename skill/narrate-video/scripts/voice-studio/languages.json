@@ -1,0 +1,290 @@
+[
+  {
+    "code": "en",
+    "name": "English",
+    "native": "English",
+    "omni_id": "en",
+    "rtl": false,
+    "prompt": "I am recording my voice to make clear, natural narration. Each sentence sounds like me.",
+    "sample": "This is my voice, ready to tell the next story."
+  },
+  {
+    "code": "ar",
+    "name": "Arabic",
+    "native": "العربية",
+    "omni_id": "arb",
+    "rtl": true,
+    "prompt": "أسجّل صوتي لصناعة تعليق واضح وطبيعي. أتحدث بهدوء وبسرعتي المعتادة، مع وقفة قصيرة بين الأفكار.",
+    "sample": "هذا صوتي، جاهز لرواية القصة القادمة."
+  },
+  {
+    "code": "es",
+    "name": "Spanish",
+    "native": "Español",
+    "omni_id": "es",
+    "rtl": false,
+    "prompt": "Estoy grabando mi voz para crear una narración clara y natural. Hablo con calma y a mi ritmo habitual.",
+    "sample": "Esta es mi voz, lista para contar la próxima historia."
+  },
+  {
+    "code": "fr",
+    "name": "French",
+    "native": "Français",
+    "omni_id": "fr",
+    "rtl": false,
+    "prompt": "Je prête ma voix à une narration claire et naturelle. Je parle calmement, à mon rythme habituel.",
+    "sample": "Voici ma voix, prête à raconter une nouvelle histoire."
+  },
+  {
+    "code": "de",
+    "name": "German",
+    "native": "Deutsch",
+    "omni_id": "de",
+    "rtl": false,
+    "prompt": "Ich nehme meine Stimme für eine klare und natürliche Erzählung auf. Ich spreche ruhig und in meinem gewohnten Tempo.",
+    "sample": ""
+  },
+  {
+    "code": "it",
+    "name": "Italian",
+    "native": "Italiano",
+    "omni_id": "it",
+    "rtl": false,
+    "prompt": "Registro la mia voce per creare una narrazione chiara e naturale. Parlo con calma, al mio ritmo abituale.",
+    "sample": ""
+  },
+  {
+    "code": "pt",
+    "name": "Portuguese",
+    "native": "Português",
+    "omni_id": "pt",
+    "rtl": false,
+    "prompt": "Estou gravando minha voz para criar uma narração clara e natural. Falo com calma, no meu ritmo habitual.",
+    "sample": ""
+  },
+  {
+    "code": "zh",
+    "name": "Mandarin Chinese",
+    "native": "中文",
+    "omni_id": "zh",
+    "rtl": false,
+    "prompt": "我正在录制自己的声音，用来制作清晰自然的旁白。我会按照平时的语速说话，在句子之间稍作停顿。",
+    "sample": ""
+  },
+  {
+    "code": "ja",
+    "name": "Japanese",
+    "native": "日本語",
+    "omni_id": "ja",
+    "rtl": false,
+    "prompt": "自然でわかりやすいナレーションを作るために、自分の声を録音しています。いつもの速さで、落ち着いて話します。",
+    "sample": ""
+  },
+  {
+    "code": "ko",
+    "name": "Korean",
+    "native": "한국어",
+    "omni_id": "ko",
+    "rtl": false,
+    "prompt": "명확하고 자연스러운 내레이션을 만들기 위해 제 목소리를 녹음하고 있습니다. 평소의 속도로 차분하게 말합니다。",
+    "sample": ""
+  },
+  {
+    "code": "hi",
+    "name": "Hindi",
+    "native": "हिन्दी",
+    "omni_id": "hi",
+    "rtl": false,
+    "prompt": "मैं स्पष्ट और स्वाभाविक वर्णन के लिए अपनी आवाज़ रिकॉर्ड कर रहा हूँ। मैं अपनी सामान्य गति से शांति से बोलता हूँ।",
+    "sample": ""
+  },
+  {
+    "code": "ru",
+    "name": "Russian",
+    "native": "Русский",
+    "omni_id": "ru",
+    "rtl": false,
+    "prompt": "Я записываю свой голос для ясного и естественного рассказа. Я говорю спокойно, в привычном темпе.",
+    "sample": ""
+  },
+  {
+    "code": "tr",
+    "name": "Turkish",
+    "native": "Türkçe",
+    "omni_id": "tr",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "nl",
+    "name": "Dutch",
+    "native": "Nederlands",
+    "omni_id": "nl",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "pl",
+    "name": "Polish",
+    "native": "Polski",
+    "omni_id": "pl",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "sv",
+    "name": "Swedish",
+    "native": "Svenska",
+    "omni_id": "sv",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "da",
+    "name": "Danish",
+    "native": "Dansk",
+    "omni_id": "da",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "fi",
+    "name": "Finnish",
+    "native": "Suomi",
+    "omni_id": "fi",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "no",
+    "name": "Norwegian",
+    "native": "Norsk",
+    "omni_id": "no",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "el",
+    "name": "Greek",
+    "native": "Ελληνικά",
+    "omni_id": "el",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "he",
+    "name": "Hebrew",
+    "native": "עברית",
+    "omni_id": "he",
+    "rtl": true,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "ms",
+    "name": "Malay",
+    "native": "Bahasa Melayu",
+    "omni_id": "ms",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "sw",
+    "name": "Swahili",
+    "native": "Kiswahili",
+    "omni_id": "sw",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "id",
+    "name": "Indonesian",
+    "native": "Bahasa Indonesia",
+    "omni_id": "id",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "ur",
+    "name": "Urdu",
+    "native": "اردو",
+    "omni_id": "ur",
+    "rtl": true,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "bn",
+    "name": "Bengali",
+    "native": "বাংলা",
+    "omni_id": "bn",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "ta",
+    "name": "Tamil",
+    "native": "தமிழ்",
+    "omni_id": "ta",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "vi",
+    "name": "Vietnamese",
+    "native": "Tiếng Việt",
+    "omni_id": "vi",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "th",
+    "name": "Thai",
+    "native": "ไทย",
+    "omni_id": "th",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "uk",
+    "name": "Ukrainian",
+    "native": "Українська",
+    "omni_id": "uk",
+    "rtl": false,
+    "prompt": "",
+    "sample": ""
+  },
+  {
+    "code": "afb",
+    "name": "Gulf Arabic",
+    "native": "العربية الخليجية",
+    "omni_id": "afb",
+    "rtl": true,
+    "prompt": "أسجّل صوتي عشان أسوي شرح واضح وطبيعي. أتكلم بهدوء وبنفس سرعتي المعتادة، وأوقف شوي بين الأفكار.",
+    "sample": ""
+  },
+  {
+    "code": "arz",
+    "name": "Egyptian Arabic",
+    "native": "العربية المصرية",
+    "omni_id": "arz",
+    "rtl": true,
+    "prompt": "بسجّل صوتي عشان أعمل شرح واضح وطبيعي. بتكلم بهدوء وبسرعتي العادية، وباخد وقفة صغيرة بين الأفكار.",
+    "sample": ""
+  }
+]

@@ -1,0 +1,255 @@
+{
+  "languages": [
+    {
+      "code": "en",
+      "name": "English",
+      "native": "English"
+    },
+    {
+      "code": "ar",
+      "name": "Arabic",
+      "native": "العربية"
+    },
+    {
+      "code": "es",
+      "name": "Spanish",
+      "native": "Español"
+    },
+    {
+      "code": "fr",
+      "name": "French",
+      "native": "Français"
+    },
+    {
+      "code": "de",
+      "name": "German",
+      "native": "Deutsch"
+    },
+    {
+      "code": "it",
+      "name": "Italian",
+      "native": "Italiano"
+    },
+    {
+      "code": "pt",
+      "name": "Portuguese",
+      "native": "Português"
+    },
+    {
+      "code": "zh",
+      "name": "Mandarin Chinese",
+      "native": "中文"
+    },
+    {
+      "code": "ja",
+      "name": "Japanese",
+      "native": "日本語"
+    },
+    {
+      "code": "ko",
+      "name": "Korean",
+      "native": "한국어"
+    },
+    {
+      "code": "hi",
+      "name": "Hindi",
+      "native": "हिन्दी"
+    },
+    {
+      "code": "ru",
+      "name": "Russian",
+      "native": "Русский"
+    },
+    {
+      "code": "tr",
+      "name": "Turkish",
+      "native": "Türkçe"
+    },
+    {
+      "code": "nl",
+      "name": "Dutch",
+      "native": "Nederlands"
+    },
+    {
+      "code": "pl",
+      "name": "Polish",
+      "native": "Polski"
+    },
+    {
+      "code": "sv",
+      "name": "Swedish",
+      "native": "Svenska"
+    },
+    {
+      "code": "da",
+      "name": "Danish",
+      "native": "Dansk"
+    },
+    {
+      "code": "fi",
+      "name": "Finnish",
+      "native": "Suomi"
+    },
+    {
+      "code": "no",
+      "name": "Norwegian",
+      "native": "Norsk"
+    },
+    {
+      "code": "el",
+      "name": "Greek",
+      "native": "Ελληνικά"
+    },
+    {
+      "code": "he",
+      "name": "Hebrew",
+      "native": "עברית"
+    },
+    {
+      "code": "ms",
+      "name": "Malay",
+      "native": "Bahasa Melayu"
+    },
+    {
+      "code": "sw",
+      "name": "Swahili",
+      "native": "Kiswahili"
+    },
+    {
+      "code": "id",
+      "name": "Indonesian",
+      "native": "Bahasa Indonesia"
+    },
+    {
+      "code": "ur",
+      "name": "Urdu",
+      "native": "اردو"
+    },
+    {
+      "code": "bn",
+      "name": "Bengali",
+      "native": "বাংলা"
+    },
+    {
+      "code": "ta",
+      "name": "Tamil",
+      "native": "தமிழ்"
+    },
+    {
+      "code": "vi",
+      "name": "Vietnamese",
+      "native": "Tiếng Việt"
+    },
+    {
+      "code": "th",
+      "name": "Thai",
+      "native": "ไทย"
+    },
+    {
+      "code": "uk",
+      "name": "Ukrainian",
+      "native": "Українська"
+    },
+    {
+      "code": "afb",
+      "name": "Gulf Arabic",
+      "native": "العربية الخليجية"
+    },
+    {
+      "code": "arz",
+      "name": "Egyptian Arabic",
+      "native": "العربية المصرية"
+    }
+  ],
+  "models": [
+    {
+      "id": "omnivoice",
+      "label": "OmniVoice",
+      "bytes": 1639492513,
+      "languages": [
+        "en",
+        "ar",
+        "es",
+        "fr",
+        "de",
+        "it",
+        "pt",
+        "zh",
+        "ja",
+        "ko",
+        "hi",
+        "ru",
+        "tr",
+        "nl",
+        "pl",
+        "sv",
+        "da",
+        "fi",
+        "no",
+        "el",
+        "he",
+        "ms",
+        "sw",
+        "id",
+        "ur",
+        "bn",
+        "ta",
+        "vi",
+        "th",
+        "uk",
+        "afb",
+        "arz"
+      ],
+      "source": "https://github.com/k2-fsa/OmniVoice"
+    },
+    {
+      "id": "chatterbox",
+      "label": "Chatterbox Multilingual",
+      "bytes": 1427734984,
+      "languages": [
+        "ar",
+        "da",
+        "de",
+        "el",
+        "en",
+        "es",
+        "fi",
+        "fr",
+        "he",
+        "hi",
+        "it",
+        "ja",
+        "ko",
+        "ms",
+        "nl",
+        "no",
+        "pl",
+        "pt",
+        "ru",
+        "sv",
+        "sw",
+        "tr",
+        "zh"
+      ],
+      "source": "https://huggingface.co/mlx-community/chatterbox-8bit"
+    },
+    {
+      "id": "qwen3-base",
+      "label": "Qwen3-TTS Base",
+      "bytes": 4544212739,
+      "languages": [
+        "zh",
+        "en",
+        "ja",
+        "ko",
+        "de",
+        "fr",
+        "ru",
+        "pt",
+        "es",
+        "it"
+      ],
+      "source": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-Base"
+    }
+  ]
+}
