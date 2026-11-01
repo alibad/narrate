@@ -1,10 +1,10 @@
 """Local language-first voice setup, recording and auditions. No cloud speech."""
-import gc,hashlib,json,os,platform,shutil,subprocess,sys,tempfile,threading,time,uuid
+import gc,hashlib,importlib.util,json,os,shutil,subprocess,sys,tempfile,threading,time,uuid
 from datetime import datetime,timezone
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse,parse_qs,unquote
-from catalog import LANGUAGES,MODELS,recommend,validate_languages,model_path,installed
+from catalog import LANGUAGES,MODELS,RUNTIMES,recommend,validate_languages,model_path,installed,runtime,variant,hub,download_dirs
 from engines import prepare,speak
 HERE=Path(__file__).parent
 DATA=Path(os.environ.get('NARRATE_VIDEO_DATA',os.environ.get('WALKTHROUGH_VIDEO_DATA',Path.home()/'.local/share/narrate-video')))
@@ -46,43 +46,48 @@ def state():
    a=json.loads(path.read_text(encoding='utf-8'))
    if a.get('id')and a.get('language')in c['languages']and a.get('engine')==c['engine']:auditions[a['language']]=a
   except (OSError,ValueError):pass
- return dict(version=2,config=c,languages=list(LANGUAGES.values()),mine=references(),plan=plan,setup=job,auditions=auditions,engines={k:dict(label=v['label'],repo=v['repo'],langs=v['languages'],clone=True)for k,v in MODELS.items()})
+ return dict(version=2,config=c,languages=list(LANGUAGES.values()),mine=references(),plan=plan,setup=job,auditions=auditions,engines={k:dict(label=v['label'],repo=v['repo'],langs=v['languages'],clone=True)for k,v in((k,variant(k))for k in MODELS)})
 
 def set_job(**values):
  with LOCK:JOB.update(values);atomic_json(DATA/'setup-job.json',JOB)
 
 def run_setup(name,languages,jobid):
  try:
-  p=model_path(name,DATA)
+  p=model_path(name,DATA);total=variant(name)['bytes'];rt=runtime()
   if not installed(name,DATA):
-   if shutil.disk_usage(DATA).free<MODELS[name]['bytes']*1.3+1024**3:raise RuntimeError('Not enough free storage for this model.')
-   p.mkdir(parents=True,exist_ok=True);set_job(state='downloading',message='Downloading the selected model',downloadedBytes=0,totalBytes=MODELS[name]['bytes'])
+   # CUDA builds download into the Hugging Face cache, so an existing HF_HUB_CACHE is reused rather than copied.
+   store=hub(DATA)if rt=='cuda'else p;store.mkdir(parents=True,exist_ok=True)
+   if shutil.disk_usage(store).free<total*1.3+1024**3:raise RuntimeError('Not enough free storage for this model.')
+   set_job(state='downloading',message='Downloading the selected model',downloadedBytes=0,totalBytes=total)
    env={**os.environ,'HF_HUB_OFFLINE':'0','TRANSFORMERS_OFFLINE':'0'}
    with (DATA/f'setup-{jobid}.log').open('w')as log:
-    child=subprocess.Popen([sys.executable,str(HERE/'setup_worker.py'),name,str(p)],env=env,stdout=log,stderr=subprocess.STDOUT)
+    child=subprocess.Popen([sys.executable,str(HERE/'setup_worker.py'),name,str(p),rt],env=env,stdout=log,stderr=subprocess.STDOUT)
     start=time.monotonic()
     while child.poll()is None:
      seen=set();size=0
-     for base in [p]+[DATA/'model-hub'/('models--'+d['repo'].replace('/','--'))for d in MODELS[name].get('dependencies',[])]:
+     for base in download_dirs(name,DATA):
       for f in base.rglob('*'):
        if f.is_file():
         st=f.stat();key=(st.st_dev,st.st_ino)
         if key not in seen:size+=st.st_size;seen.add(key)
-     set_job(downloadedBytes=min(size,MODELS[name]['bytes']))
+     set_job(downloadedBytes=min(size,total))
      if time.monotonic()-start>1800:child.terminate();child.wait();raise RuntimeError('Download timed out. Retry to resume it.')
      time.sleep(1)
     if child.returncode:raise RuntimeError('Model download failed. Check the local setup log and retry; no model was substituted.')
   set_job(state='verifying',message='Loading the model and checking its runtime')
   prepare(name,DATA)
   save_config(dict(engine=name,languages=languages,setupReady=True,setupModel=name,profileReady=False))
-  set_job(state='ready',message='Model ready on this computer',completedAt=now(),downloadedBytes=MODELS[name]['bytes'],totalBytes=MODELS[name]['bytes'])
+  set_job(state='ready',message='Model ready on this computer',completedAt=now(),downloadedBytes=total,totalBytes=total)
  except Exception as e:set_job(state='failed',message=str(e).replace(str(DATA),'private storage')[:350])
  finally:JOB_LOCK.release()
 
 def start_setup(req):
  codes=validate_languages(req.get('languages'));name=req.get('model');pref=req.get('preference','reuse');recommend(codes,DATA,pref,config()['engine'])
  if name not in MODELS or any(c not in MODELS[name]['languages']for c in codes):raise ValueError('Choose a model that covers every selected language.')
- if platform.system()!='Darwin' or platform.machine()!='arm64':raise ValueError('These local MLX adapters need Apple Silicon. No cloud fallback is configured.')
+ rt=runtime()
+ if rt=='none':raise ValueError('Local voice models need an Apple Silicon Mac, or an NVIDIA GPU with CUDA PyTorch. No cloud fallback is configured.')
+ if not variant(name)['available']:raise ValueError(f"{MODELS[name]['label']} is not available for {RUNTIMES[rt]} yet. Choose another model; none is substituted.")
+ if rt=='cuda' and not importlib.util.find_spec('chatterbox'):raise ValueError('Install the chatterbox-tts package in the Python that runs this studio first. See the local studio guide.')
  if not JOB_LOCK.acquire(blocking=False):raise ValueError('A model setup is already running. Let it finish before starting another.')
  save_config(dict(languages=codes,preference=pref,profileReady=False))
  jobid=uuid.uuid4().hex

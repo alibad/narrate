@@ -6,11 +6,25 @@ a preset or a static playback page for this workflow.
 
 ## Start locally
 
-Reuse a compatible Apple Silicon environment when present. The tested runtime
-is Python 3.12 and MLX-Audio 0.5.1. For a new machine, create an isolated Python
-3.12 environment and install `mlx-audio==0.5.1`, `huggingface-hub` and the core
-Pillow requirement there; make FFmpeg/ffprobe available. Never alter a working
-speech environment. These bundled adapters require Apple Silicon macOS.
+The studio picks its runtime from the computer it runs on:
+
+- **Apple Silicon Mac (MLX):** all three models. The tested runtime is Python
+  3.12 and MLX-Audio 0.5.1. For a new machine, create an isolated Python 3.12
+  environment and install `mlx-audio==0.5.1`, `huggingface-hub` and the core
+  Pillow requirement there.
+- **Windows or Linux with an NVIDIA GPU (CUDA):** Chatterbox Multilingual from
+  the upstream PyTorch checkpoint. Use a Python whose PyTorch reports
+  `torch.cuda.is_available()`, with `chatterbox-tts` and `huggingface-hub`
+  installed. Tested with chatterbox-tts 0.1.7 and torch 2.11 (CUDA 12.8) on an
+  RTX 5090. chatterbox-tts pins an older torch that has no kernels for the
+  newest cards, so on those install it into a virtual environment built with
+  `--system-site-packages` over a working CUDA torch instead of letting it
+  downgrade torch. OmniVoice and Qwen3-TTS Base have no CUDA build here yet; the
+  studio shows them as not available rather than substituting.
+
+Make FFmpeg/ffprobe available in either case. Never alter a working speech
+environment. `NARRATE_VIDEO_RUNTIME=mlx|cuda|none` overrides detection, for
+tests only.
 
 Start with private data storage and offline inference:
 
@@ -20,10 +34,15 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
 python scripts/voice-studio/studio.py
 ```
 
+On Windows PowerShell, set each variable with `$env:NAME = "value"` first.
+
 The agent opens `http://127.0.0.1:8765` in a microphone-capable browser.
 `VOICE_STUDIO_PORT` changes the port. If OmniVoice already exists, set
-`NARRATE_VIDEO_MODEL_DIR` to that model folder before starting. Other models
-live under the private data folder. No model weights are bundled.
+`NARRATE_VIDEO_MODEL_DIR` to that model folder before starting. MLX models live
+under the private data folder. The CUDA build downloads into the Hugging Face
+cache (`HF_HUB_CACHE`, by default inside the private data folder); point
+`HF_HUB_CACHE` at an existing cache that already holds the pinned revision and
+setup only loads it. No model weights are bundled.
 
 ## Complete setup in the browser
 
@@ -48,14 +67,15 @@ live under the private data folder. No model weights are bundled.
 
 ## Model policy and evidence
 
-| Model | Coverage in this studio | Total model data | Selection notes |
-|---|---|---:|---|
-| OmniVoice | All 32 offered languages/varieties | ~1.64 GB | Broad coverage, including offered Arabic varieties |
-| Chatterbox Multilingual | 23 languages | ~1.43 GB | Includes ~495 MB required S3 speech tokenizer |
-| Qwen3-TTS Base 1.7B | 10 languages | ~4.54 GB | Cloning checkpoint; excludes Arabic |
+| Model | Coverage in this studio | Total model data | Runs on | Selection notes |
+|---|---|---:|---|---|
+| OmniVoice | All 32 offered languages/varieties | ~1.64 GB | Mac | Broad coverage, including offered Arabic varieties |
+| Chatterbox Multilingual | 23 languages | ~1.43 GB (Mac) / ~3.21 GB (NVIDIA) | Mac, NVIDIA | Mac size includes the ~495 MB S3 speech tokenizer |
+| Qwen3-TTS Base 1.7B | 10 languages | ~4.54 GB | Mac | Cloning checkpoint; excludes Arabic |
 
-These are pinned MLX conversions. See `scripts/voice-studio/catalog.py` for exact
-repositories, revisions, dependencies and the eligibility policy. The Qwen
+The Mac builds are pinned MLX conversions; the NVIDIA build is the upstream
+ResembleAI checkpoint at a pinned revision. See `scripts/voice-studio/catalog.py`
+for exact repositories, revisions, dependencies and the eligibility policy. The Qwen
 CustomVoice checkpoint is not offered as a cloning model. Coverage is a
 capability filter, not a guarantee of pronunciation or dialect quality.
 
@@ -82,5 +102,5 @@ Recordings, transcripts, configuration, accepted takes, models and setup logs
 stay in private storage. Inference uses offline loading; the selected setup
 worker temporarily enables network access for model downloads. The local server
 binds only to loopback and rejects foreign origins. It snapshots references per
-request and serializes model loading/inference on a single MLX worker thread.
+request and serializes model loading/inference on a single worker thread.
 Keep private data, weights and generated personal audio outside public packages.

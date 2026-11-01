@@ -2,8 +2,31 @@
 import importlib.util,json,os,sys,tempfile,threading,unittest,urllib.request,urllib.error,wave,math,struct,hashlib
 from pathlib import Path
 SCRIPTS=Path(__file__).resolve().parents[1]/'scripts/voice-studio';sys.path.insert(0,str(SCRIPTS))
+# The policy tests describe the Apple Silicon catalog unless a test chooses another runtime.
+os.environ['NARRATE_VIDEO_RUNTIME']='mlx'
 from catalog import recommend,validate_languages,MODELS,LANGUAGES,installed
 spec=importlib.util.spec_from_file_location('setup_server',SCRIPTS/'studio.py');server=importlib.util.module_from_spec(spec);spec.loader.exec_module(server)
+
+class CudaPolicyTests(unittest.TestCase):
+ def setUp(self):
+  self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name);self.saved={k:os.environ.get(k)for k in('NARRATE_VIDEO_RUNTIME','HF_HUB_CACHE')}
+  os.environ.update(NARRATE_VIDEO_RUNTIME='cuda',HF_HUB_CACHE=str(self.root/'hub'))
+ def tearDown(self):
+  for k,v in self.saved.items():
+   if v is None:os.environ.pop(k,None)
+   else:os.environ[k]=v
+  self.tmp.cleanup()
+ def test_nvidia_offers_only_models_with_a_cuda_build(self):
+  plan=recommend(['en','ar'],self.root);self.assertEqual(plan['recommended'],'chatterbox');self.assertEqual(plan['runtime']['label'],'NVIDIA GPU · CUDA')
+  c=next(x for x in plan['models']if x['id']=='chatterbox');self.assertEqual(c['repo'],'ResembleAI/chatterbox');self.assertEqual(c['bytes'],MODELS['chatterbox']['cuda']['bytes'])
+  o=next(x for x in plan['models']if x['id']=='omnivoice');self.assertFalse(o['eligible']);self.assertIn('Apple Silicon',o['reason'])
+ def test_gulf_arabic_has_no_nvidia_model_yet(self):self.assertIsNone(recommend(['afb'],self.root)['recommended'])
+ def test_nvidia_chatterbox_is_found_complete_in_the_hugging_face_cache(self):
+  c=MODELS['chatterbox']['cuda'];snap=self.root/'hub'/('models--'+c['repo'].replace('/','--'))/'snapshots'/c['revision'];snap.mkdir(parents=True)
+  for f in c['files'][:-1]:(snap/f).write_bytes(b'fixture')
+  self.assertFalse(installed('chatterbox',self.root))
+  (snap/c['files'][-1]).write_bytes(b'fixture');self.assertTrue(installed('chatterbox',self.root))
+  self.assertEqual(next(x for x in recommend(['en'],self.root)['models']if x['id']=='chatterbox')['downloadBytes'],0)
 
 class PolicyTests(unittest.TestCase):
  def setUp(self):self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)
@@ -63,6 +86,14 @@ class HttpTests(unittest.TestCase):
  def test_private_status_rejects_foreign_origin(self):self.assertEqual(self.request('/api/status',headers={'Origin':'https://foreign.example'})[0],403)
  def test_invalid_setup_cannot_start_download(self):
   status,_=self.request('/api/setup',{'languages':['ar'],'model':'qwen3-base'});self.assertEqual(status,400);self.assertFalse((self.root/'models').exists())
+ def test_setup_names_the_supported_runtimes_and_never_substitutes(self):
+  try:
+   os.environ['NARRATE_VIDEO_RUNTIME']='none'
+   status,data=self.request('/api/setup',{'languages':['en'],'model':'chatterbox'});self.assertEqual(status,400);self.assertIn('Apple Silicon Mac, or an NVIDIA GPU',data['error'])
+   os.environ['NARRATE_VIDEO_RUNTIME']='cuda'
+   status,data=self.request('/api/setup',{'languages':['en'],'model':'omnivoice'});self.assertEqual(status,400);self.assertIn('not available for NVIDIA',data['error'])
+  finally:os.environ['NARRATE_VIDEO_RUNTIME']='mlx'
+  self.assertFalse((self.root/'models').exists())
  def test_finish_requires_accepted_auditions(self):self.assertEqual(self.request('/api/finish',{})[0],400)
  def test_missing_same_language_reference_never_falls_back(self):
   (server.VOICES/'en.wav').write_bytes(b'fixture');server.save_config({'languages':['ar'],'setupReady':True,'setupModel':'omnivoice'})
