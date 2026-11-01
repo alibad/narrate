@@ -3,162 +3,194 @@
     {
       "code": "en",
       "name": "English",
-      "native": "English"
+      "native": "English",
+      "flag": "gb"
     },
     {
       "code": "ar",
       "name": "Arabic",
-      "native": "العربية"
+      "native": "العربية",
+      "flag": "sa"
     },
     {
       "code": "es",
       "name": "Spanish",
-      "native": "Español"
+      "native": "Español",
+      "flag": "es"
     },
     {
       "code": "fr",
       "name": "French",
-      "native": "Français"
+      "native": "Français",
+      "flag": "fr"
     },
     {
       "code": "de",
       "name": "German",
-      "native": "Deutsch"
+      "native": "Deutsch",
+      "flag": "de"
     },
     {
       "code": "it",
       "name": "Italian",
-      "native": "Italiano"
+      "native": "Italiano",
+      "flag": "it"
     },
     {
       "code": "pt",
       "name": "Portuguese",
-      "native": "Português"
+      "native": "Português",
+      "flag": "pt"
     },
     {
       "code": "zh",
       "name": "Mandarin Chinese",
-      "native": "中文"
+      "native": "中文",
+      "flag": "cn"
     },
     {
       "code": "ja",
       "name": "Japanese",
-      "native": "日本語"
+      "native": "日本語",
+      "flag": "jp"
     },
     {
       "code": "ko",
       "name": "Korean",
-      "native": "한국어"
+      "native": "한국어",
+      "flag": "kr"
     },
     {
       "code": "hi",
       "name": "Hindi",
-      "native": "हिन्दी"
+      "native": "हिन्दी",
+      "flag": "in"
     },
     {
       "code": "ru",
       "name": "Russian",
-      "native": "Русский"
+      "native": "Русский",
+      "flag": "ru"
     },
     {
       "code": "tr",
       "name": "Turkish",
-      "native": "Türkçe"
+      "native": "Türkçe",
+      "flag": "tr"
     },
     {
       "code": "nl",
       "name": "Dutch",
-      "native": "Nederlands"
+      "native": "Nederlands",
+      "flag": "nl"
     },
     {
       "code": "pl",
       "name": "Polish",
-      "native": "Polski"
+      "native": "Polski",
+      "flag": "pl"
     },
     {
       "code": "sv",
       "name": "Swedish",
-      "native": "Svenska"
+      "native": "Svenska",
+      "flag": "se"
     },
     {
       "code": "da",
       "name": "Danish",
-      "native": "Dansk"
+      "native": "Dansk",
+      "flag": "dk"
     },
     {
       "code": "fi",
       "name": "Finnish",
-      "native": "Suomi"
+      "native": "Suomi",
+      "flag": "fi"
     },
     {
       "code": "no",
       "name": "Norwegian",
-      "native": "Norsk"
+      "native": "Norsk",
+      "flag": "no"
     },
     {
       "code": "el",
       "name": "Greek",
-      "native": "Ελληνικά"
+      "native": "Ελληνικά",
+      "flag": "gr"
     },
     {
       "code": "he",
       "name": "Hebrew",
-      "native": "עברית"
+      "native": "עברית",
+      "flag": "il"
     },
     {
       "code": "ms",
       "name": "Malay",
-      "native": "Bahasa Melayu"
+      "native": "Bahasa Melayu",
+      "flag": "my"
     },
     {
       "code": "sw",
       "name": "Swahili",
-      "native": "Kiswahili"
+      "native": "Kiswahili",
+      "flag": "tz"
     },
     {
       "code": "id",
       "name": "Indonesian",
-      "native": "Bahasa Indonesia"
+      "native": "Bahasa Indonesia",
+      "flag": "id"
     },
     {
       "code": "ur",
       "name": "Urdu",
-      "native": "اردو"
+      "native": "اردو",
+      "flag": "pk"
     },
     {
       "code": "bn",
       "name": "Bengali",
-      "native": "বাংলা"
+      "native": "বাংলা",
+      "flag": "bd"
     },
     {
       "code": "ta",
       "name": "Tamil",
-      "native": "தமிழ்"
+      "native": "தமிழ்",
+      "flag": "in"
     },
     {
       "code": "vi",
       "name": "Vietnamese",
-      "native": "Tiếng Việt"
+      "native": "Tiếng Việt",
+      "flag": "vn"
     },
     {
       "code": "th",
       "name": "Thai",
-      "native": "ไทย"
+      "native": "ไทย",
+      "flag": "th"
     },
     {
       "code": "uk",
       "name": "Ukrainian",
-      "native": "Українська"
+      "native": "Українська",
+      "flag": "ua"
     },
     {
       "code": "afb",
       "name": "Gulf Arabic",
-      "native": "العربية الخليجية"
+      "native": "العربية الخليجية",
+      "flag": "qa"
     },
     {
       "code": "arz",
       "name": "Egyptian Arabic",
-      "native": "العربية المصرية"
+      "native": "العربية المصرية",
+      "flag": "eg"
     }
   ],
   "models": [
