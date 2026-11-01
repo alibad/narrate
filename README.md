@@ -40,7 +40,10 @@ npm run dev
 ```
 
 The site has a real language/model explorer, a setup guide, a portable skill ZIP
-and ten H.264/AAC preview films with captions and source links. The public site
+and ten H.264/AAC preview films with captions and source links. Every film and
+the studio helper have a crawlable watch page with a transcript and video
+structured data; the sitemap includes their video URLs. Footer links connect
+Narrate to Human Quest and the AI Patterns collection. The public site
 never accesses a microphone or automatically connects to a private local API.
 Actual recording and inference happen in the installed local skill.
 

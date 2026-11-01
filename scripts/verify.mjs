@@ -7,3 +7,19 @@ for(const name of ['index.html','guide.html','app.js','model-policy.js','style.c
 for(const f of films){assert(f.video&&f.vtt&&f.poster&&f.duration>15);assert.equal(f.review,'pending');for(const key of ['video','vtt','poster'])await access(path.join(root,'dist',f[key]));const probe=JSON.parse(execFileSync('ffprobe',['-v','error','-show_streams','-of','json',path.join(root,'dist',f.video)],{encoding:'utf8'}));assert(probe.streams.some(s=>s.codec_name==='h264'&&s.width===1920&&s.height===1080&&s.pix_fmt==='yuv420p'));assert(probe.streams.some(s=>s.codec_name==='aac'&&s.sample_rate==='48000'));const vtt=await read('dist'+f.vtt);assert(vtt.startsWith('WEBVTT'));assert.equal((vtt.match(/-->/g)||[]).length,3);}
 try{const w=await readdir(path.join(root,'.github/workflows'));assert.equal(w.length,0,'Hosted workflows are not authorized')}catch(e){if(e.code!=='ENOENT')throw e}
 console.log('Website checks passed: selection policy, real navigation, ten playable H.264/AAC films, captions, assets and no hosted workflows.');
+
+// A crawler receives the same discoverable collection as a JavaScript browser.
+const builtHome=await read('dist/index.html');
+assert(builtHome.includes('href="https://www.humanquest.net/"'));
+assert(builtHome.includes('href="https://www.humanquest.net/ai-patterns"'));
+for(const id of [...films.map(f=>f.id),'studio']){
+ assert(builtHome.includes(`/films/${id}/`),`Missing crawlable film link ${id}`);
+ const watch=await read(`dist/films/${id}/index.html`);
+ assert(watch.includes('<video controls'));
+ assert(watch.includes('Human Quest'));
+ if(process.env.PUBLIC_SITE_URL){
+  assert(watch.includes('"@type":"VideoObject"'));
+  assert(watch.includes(`rel="canonical" href="${process.env.PUBLIC_SITE_URL}/films/${id}/"`));
+ }
+}
+console.log('Crawlable film links, watch pages, video metadata and Human Quest footer links verified.');
