@@ -3,5 +3,5 @@
 
 .studio-context-mark svg{width:15px;height:15px}.reference-wave{border:1px solid #364558;background:#101925;border-radius:10px;margin:23px 0 18px;padding:14px 14px 9px;box-shadow:inset 0 0 25px #03070f22}.reference-wave>span{font:8px ui-monospace,SFMono-Regular,monospace;letter-spacing:.15em;color:#72849e}.reference-wave canvas{display:block;width:100%;height:91px;margin-top:6px}.saved-recording audio{margin-top:16px}@media(max-width:730px){.reference-wave canvas{height:78px}}
 
-/* Restore the recording tape: readable, rounded bars at every screen density. */
-.record-box canvas{height:132px}.reference-wave canvas{height:112px}.take-wave{position:relative;margin-bottom:14px}.record-box .take-wave canvas{height:112px}.record-box audio{display:block;width:100%;position:relative;margin:0 0 18px}@media(max-width:730px){.record-box canvas{height:112px}.reference-wave canvas,.record-box .take-wave canvas{height:96px}}
+/* Live microphone tape: rounded sample bars, independent of playback. */
+.record-box #wave{height:132px}@media(max-width:730px){.record-box #wave{height:112px}}
