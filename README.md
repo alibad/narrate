@@ -16,8 +16,9 @@ narration client, capture adapter, renderer and media QA.
 Choose languages first. The studio explains compatible cloning models, downloads
 and verifies the chosen model, then records or reuses your voice. Listen to an
 audition in each selected language before saving the profile. The refreshed
-interface has a dark editing-suite layout, real saved-audio waveforms, playback
-cursors, clear reference labels and motion that respects reduced-motion settings.
+interface has a dark editing-suite layout, live recording bars that build as you
+speak, readable saved/new-take waveforms, playback cursors, clear reference
+labels and motion that respects reduced-motion settings.
 
 Local speech adapters require Apple Silicon macOS, Python 3.12 with MLX-Audio
 0.5.1, and FFmpeg. The core renderer supports supplied audio on other platforms.
