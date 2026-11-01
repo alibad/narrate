@@ -9,7 +9,7 @@ from engines import prepare,speak
 HERE=Path(__file__).parent
 DATA=Path(os.environ.get('NARRATE_VIDEO_DATA',os.environ.get('WALKTHROUGH_VIDEO_DATA',Path.home()/'.local/share/narrate-video')))
 os.environ.setdefault('HF_HUB_CACHE',str(DATA/'model-hub'))
-VOICES=DATA/'voices/me';OUT=DATA/'out/studio';CONFIG=DATA/'config.json';PORT=int(os.environ.get('VOICE_STUDIO_PORT','8765'))
+VOICES=DATA/'voices/me';OUT=DATA/'out/studio';GUIDE=DATA/'out/guide';CONFIG=DATA/'config.json';PORT=int(os.environ.get('VOICE_STUDIO_PORT','8765'))
 LOCK=threading.RLock();JOB_LOCK=threading.Lock();JOB={'state':'idle'}
 
 def now():return datetime.now(timezone.utc).isoformat()
@@ -114,6 +114,22 @@ def generate(req):
   atomic_json(out.with_suffix('.json'),result)
   return result
 
+def guide(req):
+ """Speak a passage the user cannot read, in their own saved voice, to read along with. Never an audition."""
+ c=config();name=c['engine'];lang=req.get('lang');text=str(req.get('text','')).strip()
+ if lang not in c['languages']or name not in MODELS or lang not in variant(name)['languages']:raise ValueError('Choose a selected language that the model supports.')
+ if not c.get('setupReady')or c.get('setupModel')!=name:raise ValueError('Complete setup for the selected model first.')
+ if not 1<=len(text)<=600:raise ValueError('Keep the passage between 1 and 600 characters.')
+ GUIDE.mkdir(parents=True,exist_ok=True)
+ with tempfile.TemporaryDirectory(prefix='guide-',dir=GUIDE)as td:
+  with LOCK:
+   saved=[x.stem for x in VOICES.glob('*.wav')if x.stem in LANGUAGES]
+   code=lang if lang in saved else 'en' if 'en' in saved else(saved[0]if saved else None)
+   if not code:raise ValueError('Save one recording first; the guide speaks in your own voice.')
+   ref=Path(td)/'reference.wav';shutil.copyfile(VOICES/f'{code}.wav',ref);reftext=(VOICES/f'{code}.txt').read_text(encoding='utf-8')
+  out=GUIDE/f'{uuid.uuid4().hex}-{lang}.wav';result=speak(name,lang,text,str(out),str(ref),reftext,DATA)
+ return dict(url=f'/guide/{out.name}',seconds=result['seconds'],from_recording=code,language=lang)
+
 class Handler(BaseHTTPRequestHandler):
  def log_message(self,*args):pass
  def trusted(self):
@@ -124,7 +140,7 @@ class Handler(BaseHTTPRequestHandler):
  def json(self,obj,status=200):self.send(status,json.dumps(obj,ensure_ascii=False).encode())
  def file(self,path):
   if not path.is_file():return self.send(404,b'not found','text/plain')
-  self.send(200,path.read_bytes(),{'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.wav':'audio/wav','.mp3':'audio/mpeg','.json':'application/json'}.get(path.suffix,'application/octet-stream'))
+  self.send(200,path.read_bytes(),{'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.wav':'audio/wav','.mp3':'audio/mpeg','.json':'application/json','.svg':'image/svg+xml'}.get(path.suffix,'application/octet-stream'))
  def do_GET(self):
   path=unquote(urlparse(self.path).path)
   if path in('/','/index.html')and self.headers.get('Host')in{f'localhost:{PORT}',f'127.0.0.1:{PORT}'}:return self.file(HERE/'studio.html')
@@ -133,6 +149,8 @@ class Handler(BaseHTTPRequestHandler):
   if path=='/api/status':return self.json(state())
   if path.startswith('/me/')and Path(path).name[:-4]in LANGUAGES and path.endswith('.wav'):return self.file(VOICES/Path(path).name)
   if path.startswith('/out/')and Path(path).suffix in('.wav','.mp3'):return self.file(OUT/Path(path).name)
+  if path.startswith('/guide/')and Path(path).suffix=='.wav':return self.file(GUIDE/Path(path).name)
+  if path.startswith('/flags/')and Path(path).stem.isalpha()and Path(path).suffix=='.svg':return self.file(HERE/'flags'/Path(path).name)
   return self.send(404,b'not found','text/plain')
  def do_POST(self):
   if not self.trusted():return self.send(403,b'local studio only','text/plain')
@@ -167,6 +185,7 @@ class Handler(BaseHTTPRequestHandler):
     lang=req.get('language');ref=req.get('reference')
     if lang not in config()['languages']or ref not in references():raise ValueError('Choose an existing saved recording.')
     c=config();refs=c.get('references',{});refs[lang]=ref;save_config(dict(references=refs,profileReady=False));return self.json(state())
+   if url.path=='/api/guide':return self.json(guide(req))
    if url.path in('/api/generate','/v1/audio/speech'):
     result=generate(req)
     if url.path=='/api/generate':return self.json(result)
@@ -188,6 +207,6 @@ class Handler(BaseHTTPRequestHandler):
   except Exception as e:return self.json({'error':str(e).replace(str(DATA),'private storage')[:500]},400)
 
 if __name__=='__main__':
- for p in(DATA,VOICES,OUT):p.mkdir(parents=True,exist_ok=True)
+ for p in(DATA,VOICES,OUT,GUIDE):p.mkdir(parents=True,exist_ok=True)
  print(f'Voice setup at http://127.0.0.1:{PORT}',flush=True)
  ThreadingHTTPServer(('127.0.0.1',PORT),Handler).serve_forever()

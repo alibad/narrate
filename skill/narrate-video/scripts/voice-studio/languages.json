@@ -6,7 +6,8 @@
     "omni_id": "en",
     "rtl": false,
     "prompt": "I am recording my voice to make clear, natural narration. Each sentence sounds like me.",
-    "sample": "This is my voice, ready to tell the next story."
+    "sample": "This is my voice, ready to tell the next story.",
+    "flag": "gb"
   },
   {
     "code": "ar",
@@ -15,7 +16,8 @@
     "omni_id": "arb",
     "rtl": true,
     "prompt": "أسجّل صوتي لصناعة تعليق واضح وطبيعي. أتحدث بهدوء وبسرعتي المعتادة، مع وقفة قصيرة بين الأفكار.",
-    "sample": "هذا صوتي، جاهز لرواية القصة القادمة."
+    "sample": "هذا صوتي، جاهز لرواية القصة القادمة.",
+    "flag": "sa"
   },
   {
     "code": "es",
@@ -24,7 +26,8 @@
     "omni_id": "es",
     "rtl": false,
     "prompt": "Estoy grabando mi voz para crear una narración clara y natural. Hablo con calma y a mi ritmo habitual.",
-    "sample": "Esta es mi voz, lista para contar la próxima historia."
+    "sample": "Esta es mi voz, lista para contar la próxima historia.",
+    "flag": "es"
   },
   {
     "code": "fr",
@@ -33,7 +36,8 @@
     "omni_id": "fr",
     "rtl": false,
     "prompt": "Je prête ma voix à une narration claire et naturelle. Je parle calmement, à mon rythme habituel.",
-    "sample": "Voici ma voix, prête à raconter une nouvelle histoire."
+    "sample": "Voici ma voix, prête à raconter une nouvelle histoire.",
+    "flag": "fr"
   },
   {
     "code": "de",
@@ -42,7 +46,8 @@
     "omni_id": "de",
     "rtl": false,
     "prompt": "Ich nehme meine Stimme für eine klare und natürliche Erzählung auf. Ich spreche ruhig und in meinem gewohnten Tempo.",
-    "sample": ""
+    "sample": "",
+    "flag": "de"
   },
   {
     "code": "it",
@@ -51,7 +56,8 @@
     "omni_id": "it",
     "rtl": false,
     "prompt": "Registro la mia voce per creare una narrazione chiara e naturale. Parlo con calma, al mio ritmo abituale.",
-    "sample": ""
+    "sample": "",
+    "flag": "it"
   },
   {
     "code": "pt",
@@ -60,7 +66,8 @@
     "omni_id": "pt",
     "rtl": false,
     "prompt": "Estou gravando minha voz para criar uma narração clara e natural. Falo com calma, no meu ritmo habitual.",
-    "sample": ""
+    "sample": "",
+    "flag": "pt"
   },
   {
     "code": "zh",
@@ -69,7 +76,8 @@
     "omni_id": "zh",
     "rtl": false,
     "prompt": "我正在录制自己的声音，用来制作清晰自然的旁白。我会按照平时的语速说话，在句子之间稍作停顿。",
-    "sample": ""
+    "sample": "",
+    "flag": "cn"
   },
   {
     "code": "ja",
@@ -78,7 +86,8 @@
     "omni_id": "ja",
     "rtl": false,
     "prompt": "自然でわかりやすいナレーションを作るために、自分の声を録音しています。いつもの速さで、落ち着いて話します。",
-    "sample": ""
+    "sample": "",
+    "flag": "jp"
   },
   {
     "code": "ko",
@@ -87,7 +96,8 @@
     "omni_id": "ko",
     "rtl": false,
     "prompt": "명확하고 자연스러운 내레이션을 만들기 위해 제 목소리를 녹음하고 있습니다. 평소의 속도로 차분하게 말합니다。",
-    "sample": ""
+    "sample": "",
+    "flag": "kr"
   },
   {
     "code": "hi",
@@ -96,7 +106,8 @@
     "omni_id": "hi",
     "rtl": false,
     "prompt": "मैं स्पष्ट और स्वाभाविक वर्णन के लिए अपनी आवाज़ रिकॉर्ड कर रहा हूँ। मैं अपनी सामान्य गति से शांति से बोलता हूँ।",
-    "sample": ""
+    "sample": "",
+    "flag": "in"
   },
   {
     "code": "ru",
@@ -105,7 +116,8 @@
     "omni_id": "ru",
     "rtl": false,
     "prompt": "Я записываю свой голос для ясного и естественного рассказа. Я говорю спокойно, в привычном темпе.",
-    "sample": ""
+    "sample": "",
+    "flag": "ru"
   },
   {
     "code": "tr",
@@ -114,7 +126,8 @@
     "omni_id": "tr",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "tr"
   },
   {
     "code": "nl",
@@ -123,7 +136,8 @@
     "omni_id": "nl",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "nl"
   },
   {
     "code": "pl",
@@ -132,7 +146,8 @@
     "omni_id": "pl",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "pl"
   },
   {
     "code": "sv",
@@ -141,7 +156,8 @@
     "omni_id": "sv",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "se"
   },
   {
     "code": "da",
@@ -150,7 +166,8 @@
     "omni_id": "da",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "dk"
   },
   {
     "code": "fi",
@@ -159,7 +176,8 @@
     "omni_id": "fi",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "fi"
   },
   {
     "code": "no",
@@ -168,7 +186,8 @@
     "omni_id": "no",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "no"
   },
   {
     "code": "el",
@@ -177,7 +196,8 @@
     "omni_id": "el",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "gr"
   },
   {
     "code": "he",
@@ -186,7 +206,8 @@
     "omni_id": "he",
     "rtl": true,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "il"
   },
   {
     "code": "ms",
@@ -195,7 +216,8 @@
     "omni_id": "ms",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "my"
   },
   {
     "code": "sw",
@@ -204,7 +226,8 @@
     "omni_id": "sw",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "tz"
   },
   {
     "code": "id",
@@ -213,7 +236,8 @@
     "omni_id": "id",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "id"
   },
   {
     "code": "ur",
@@ -222,7 +246,8 @@
     "omni_id": "ur",
     "rtl": true,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "pk"
   },
   {
     "code": "bn",
@@ -231,7 +256,8 @@
     "omni_id": "bn",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "bd"
   },
   {
     "code": "ta",
@@ -240,7 +266,8 @@
     "omni_id": "ta",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "in"
   },
   {
     "code": "vi",
@@ -249,7 +276,8 @@
     "omni_id": "vi",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "vn"
   },
   {
     "code": "th",
@@ -258,7 +286,8 @@
     "omni_id": "th",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "th"
   },
   {
     "code": "uk",
@@ -267,7 +296,8 @@
     "omni_id": "uk",
     "rtl": false,
     "prompt": "",
-    "sample": ""
+    "sample": "",
+    "flag": "ua"
   },
   {
     "code": "afb",
@@ -276,7 +306,8 @@
     "omni_id": "afb",
     "rtl": true,
     "prompt": "أسجّل صوتي عشان أسوي شرح واضح وطبيعي. أتكلم بهدوء وبنفس سرعتي المعتادة، وأوقف شوي بين الأفكار.",
-    "sample": ""
+    "sample": "",
+    "flag": "qa"
   },
   {
     "code": "arz",
@@ -285,6 +316,7 @@
     "omni_id": "arz",
     "rtl": true,
     "prompt": "بسجّل صوتي عشان أعمل شرح واضح وطبيعي. بتكلم بهدوء وبسرعتي العادية، وباخد وقفة صغيرة بين الأفكار.",
-    "sample": ""
+    "sample": "",
+    "flag": "eg"
   }
 ]

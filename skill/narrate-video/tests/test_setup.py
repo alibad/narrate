@@ -61,10 +61,12 @@ class PolicyTests(unittest.TestCase):
   for codes in [[],['made-up'],['en']*13]:
    with self.assertRaises(ValueError):validate_languages(codes)
  def test_only_cloning_models_are_offered(self):self.assertTrue(all(m['cloning']for m in MODELS.values()))
+ def test_every_language_has_a_bundled_flag(self):
+  for l in LANGUAGES.values():self.assertTrue((SCRIPTS/'flags'/f"{l['flag']}.svg").is_file(),l['code'])
 
 class HttpTests(unittest.TestCase):
  def setUp(self):
-  self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name);server.DATA=self.root;server.VOICES=self.root/'voices/me';server.OUT=self.root/'out/studio';server.CONFIG=self.root/'config.json'
+  self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name);server.DATA=self.root;server.VOICES=self.root/'voices/me';server.OUT=self.root/'out/studio';server.GUIDE=self.root/'out/guide';server.CONFIG=self.root/'config.json'
   for p in(server.VOICES,server.OUT):p.mkdir(parents=True)
   self.http=server.ThreadingHTTPServer(('127.0.0.1',0),server.Handler);server.PORT=self.http.server_address[1];self.thread=threading.Thread(target=self.http.serve_forever,daemon=True);self.thread.start();self.url=f'http://127.0.0.1:{server.PORT}'
  def tearDown(self):self.http.shutdown();self.http.server_close();self.tmp.cleanup()
@@ -94,6 +96,16 @@ class HttpTests(unittest.TestCase):
    status,data=self.request('/api/setup',{'languages':['en'],'model':'omnivoice'});self.assertEqual(status,400);self.assertIn('not available for NVIDIA',data['error'])
   finally:os.environ['NARRATE_VIDEO_RUNTIME']='mlx'
   self.assertFalse((self.root/'models').exists())
+ def test_every_language_flag_is_served_and_paths_cannot_escape(self):
+  for code in {l['flag']for l in LANGUAGES.values()}:
+   with urllib.request.urlopen(self.url+f'/flags/{code}.svg')as r:self.assertEqual(r.headers.get_content_type(),'image/svg+xml');self.assertIn(b'<svg',r.read(200))
+  for path in('/flags/..%2Fstudio.py','/flags/gb.py','/guide/..%2F..%2Fconfig.json'):self.assertEqual(self.request(path)[0],404)
+ def test_guide_needs_setup_and_a_saved_recording_and_is_never_an_audition(self):
+  status,data=self.request('/api/guide',{'lang':'en','text':'Hello.'});self.assertEqual(status,400);self.assertIn('Complete setup',data['error'])
+  server.save_config({'engine':'chatterbox','languages':['en','zh'],'setupReady':True,'setupModel':'chatterbox'})
+  status,data=self.request('/api/guide',{'lang':'zh','text':'你好。'});self.assertEqual(status,400);self.assertIn('Save one recording',data['error'])
+  status,data=self.request('/api/guide',{'lang':'fr','text':'Bonjour.'});self.assertEqual(status,400);self.assertIn('selected language',data['error'])
+  self.assertEqual(list(server.OUT.glob('*')),[])
  def test_finish_requires_accepted_auditions(self):self.assertEqual(self.request('/api/finish',{})[0],400)
  def test_missing_same_language_reference_never_falls_back(self):
   (server.VOICES/'en.wav').write_bytes(b'fixture');server.save_config({'languages':['ar'],'setupReady':True,'setupModel':'omnivoice'})
