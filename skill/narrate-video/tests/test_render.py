@@ -160,10 +160,14 @@ class RenderTests(unittest.TestCase):
         self.assertEqual(receipt["frames"], 120)
         self.assertEqual([s["motion"] for s in receipt["scenes"]], ["push", "none"])
         self.assertEqual(receipt["presentation"]["header"], False)
+        frames = {}
         def frame(t):
-            target = self.root / f"styled-{t}.png"
-            r.command(["ffmpeg", "-v", "error", "-ss", str(t), "-i", dest / "walkthrough.mp4", "-frames:v", "1", target])
-            return Image.open(target).convert("RGB")
+            # Each time is extracted once: a second ffmpeg run onto the same file would stop at its overwrite prompt.
+            if t not in frames:
+                target = self.root / f"styled-{t}.png"
+                r.command(["ffmpeg", "-v", "error", "-ss", str(t), "-i", dest / "walkthrough.mp4", "-frames:v", "1", target])
+                frames[t] = Image.open(target).convert("RGB")
+            return frames[t]
         def mean_change(a, b):
             return sum(ImageStat.Stat(ImageChops.difference(a.crop((0, 0, 640, 302)), b.crop((0, 0, 640, 302)))).mean)/3
         early = frame(.2)

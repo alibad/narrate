@@ -18,7 +18,8 @@ PUSH = .05  # a still's optional push-in grows by 5% over its scene
 
 
 def command(args):
-    result = subprocess.run([str(a) for a in args], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    # No keyboard input: an ffmpeg prompt (such as "Overwrite? [y/N]") fails at once instead of waiting forever.
+    result = subprocess.run([str(a) for a in args], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if result.returncode:
         raise ValueError(f"{Path(str(args[0])).name} failed: {result.stderr[-1800:]}")
     return result.stdout
@@ -29,7 +30,7 @@ def probe(path):
 
 
 def audio_peak(path):
-    check = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(path), "-af", "volumedetect", "-vn", "-sn", "-dn", "-f", "null", "-"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    check = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(path), "-af", "volumedetect", "-vn", "-sn", "-dn", "-f", "null", "-"], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace")
     peak = re.search(r"max_volume: (-?(?:[0-9.]+|inf)) dB", check.stderr)
     if check.returncode or not peak:
         raise ValueError("Could not measure narration audio")

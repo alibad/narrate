@@ -68,7 +68,7 @@ def inspect(video, evidence, output, transcript=None):
     for i,thumb in enumerate(thumbs):sheet.paste(thumb,((i%cols)*w,(i//cols)*(h+40)))
     sheet.save(output/'contact-sheet.jpg')
     import subprocess
-    p=subprocess.run(['ffmpeg','-hide_banner','-i',str(video),'-af','loudnorm=I=-18:TP=-1.5:LRA=11:print_format=json','-f','null','-'],capture_output=True,text=True,encoding='utf-8',errors='replace')
+    p=subprocess.run(['ffmpeg','-hide_banner','-i',str(video),'-af','loudnorm=I=-18:TP=-1.5:LRA=11:print_format=json','-f','null','-'],stdin=subprocess.DEVNULL,capture_output=True,text=True,encoding='utf-8',errors='replace')
     match=re.search(r'\{\s*"input_i".*?\}',p.stderr,re.S)
     if p.returncode or not match: raise ValueError('Loudness measurement failed')
     loudness=json.loads(match.group())

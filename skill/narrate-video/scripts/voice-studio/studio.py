@@ -145,7 +145,7 @@ class Handler(BaseHTTPRequestHandler):
     if lang not in LANGUAGES or not text or len(text)>2400:raise ValueError('Choose a language and include the text you read.')
     with tempfile.TemporaryDirectory(prefix='recording-',dir=OUT)as td:
      source=Path(td)/'upload';source.write_bytes(body);wav=Path(td)/'voice.wav'
-     subprocess.run(['ffmpeg','-v','error','-i',str(source),'-ac','1','-ar','24000','-af','loudnorm=I=-18:TP=-2',str(wav)],check=True,capture_output=True)
+     subprocess.run(['ffmpeg','-v','error','-i',str(source),'-ac','1','-ar','24000','-af','loudnorm=I=-18:TP=-2',str(wav)],stdin=subprocess.DEVNULL,check=True,capture_output=True)
      seconds=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',str(wav)]))
      if not 3<=seconds<=35:raise ValueError('Record at least 3 seconds and no more than 35 seconds. Aim for 5–10 seconds.')
      with LOCK:
@@ -170,7 +170,7 @@ class Handler(BaseHTTPRequestHandler):
    if url.path in('/api/generate','/v1/audio/speech'):
     result=generate(req)
     if url.path=='/api/generate':return self.json(result)
-    wav=OUT/result['file'];mp3=wav.with_suffix('.mp3');subprocess.run(['ffmpeg','-v','error','-i',str(wav),'-ar','48000','-b:a','192k',str(mp3)],check=True)
+    wav=OUT/result['file'];mp3=wav.with_suffix('.mp3');subprocess.run(['ffmpeg','-v','error','-i',str(wav),'-ar','48000','-b:a','192k',str(mp3)],stdin=subprocess.DEVNULL,check=True)
     data=mp3.read_bytes();self.send_response(200);self.send_header('Content-Type','audio/mpeg');self.send_header('Content-Length',str(len(data)));self.send_header('X-Voice',f"{result['engine']}; cloned=True; lang={result['language']}");self.send_header('X-Voice-Reference-SHA256',result['referenceSha256']);self.send_header('X-Voice-Reference-Language',result['from_recording']);self.end_headers();self.wfile.write(data);return
    if url.path=='/api/accept':
     token=req.get('id');files=list(OUT.glob(f'{token}-*.json'))if isinstance(token,str)and len(token)==32 and all(c in'0123456789abcdef'for c in token)else[]

@@ -38,7 +38,7 @@ def synthesize(config_path, text_path, destination, language, voice):
         fields = dict(input=str(source), output=str(out), voice=voice, language=language)
         args = [a.format_map(fields) for a in argv]
         # A selected command is executable code; inspect its behavior before opting in.
-        proc = subprocess.run(args, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=600)
+        proc = subprocess.run(args, stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=600)
         if proc.returncode:
             raise ValueError('Selected speech command failed; see local provider logs; no fallback attempted')
         info = probe(out)
