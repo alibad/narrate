@@ -7,6 +7,10 @@ for p in files:
  if re.search(r'(?:/Users/|/home/)[^/\s]+/',p.read_text()):raise ValueError('Private absolute path in skill package')
 (skill/'FILES.sha256').write_text(''.join(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.relative_to(skill).as_posix()}\n'for p in files))
 dest=ROOT/'site/downloads';dest.mkdir(exist_ok=True)
-with zipfile.ZipFile(dest/'narrate-video.zip','w',zipfile.ZIP_DEFLATED)as out:
- for p in sorted(files+[skill/'FILES.sha256']):out.write(p,Path('narrate-video')/p.relative_to(skill))
+with zipfile.ZipFile(dest/'narrate-video.zip','w',zipfile.ZIP_DEFLATED,compresslevel=9)as out:
+ for p in sorted(files+[skill/'FILES.sha256']):
+  info=zipfile.ZipInfo((Path('narrate-video')/p.relative_to(skill)).as_posix(),date_time=(1980,1,1,0,0,0))
+  info.compress_type=zipfile.ZIP_DEFLATED;info.create_system=3
+  info.external_attr=(0o100755 if p.stat().st_mode&0o111 else 0o100644)<<16
+  out.writestr(info,p.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
 print('Portable skill packaged without reference audio, weights or private paths.')
