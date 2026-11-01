@@ -30,7 +30,7 @@ PYTHON=/path/to/audio-python sh skill/narrate-video/scripts/verify.sh
 
 ## The website
 
-Node 22+ and Python 3 build and preview the static website. No npm dependencies.
+Node 22 and Python 3 build and preview the static website. No npm dependencies.
 
 ```sh
 npm run build
@@ -74,5 +74,10 @@ Deploy local build output through the configured Vercel project; no GitHub
 Actions or automatic Git deployment is used. Set `PUBLIC_SITE_URL` only to a
 verified HTTPS origin before the final public build. Reference audio and model
 weights must remain outside any public deployment or repository.
+
+```sh
+PUBLIC_SITE_URL=https://narrate.humanquest.net vercel build --prod
+vercel deploy --prebuilt --prod
+```
 
 Code: [MIT](LICENSE). Model and media terms: [NOTICE.md](NOTICE.md).

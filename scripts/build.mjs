@@ -8,7 +8,7 @@ await writeFile(path.join(root,'site/manifest.webmanifest'),JSON.stringify({name
 const publicUrl=process.env.PUBLIC_SITE_URL?.replace(/\/$/,'');
 if(publicUrl&&!/^https:\/\/[a-z0-9.-]+$/i.test(publicUrl))throw Error('PUBLIC_SITE_URL must be an HTTPS origin');
 await writeFile(path.join(root,'site/robots.txt'),publicUrl?`User-agent: *\nAllow: /\nSitemap: ${publicUrl}/sitemap.xml\n`:'User-agent: *\nDisallow: /\n');
-await writeFile(path.join(root,'site/sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${publicUrl?`<url><loc>${publicUrl}/</loc></url>`:''}</urlset>`);
+await writeFile(path.join(root,'site/sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${publicUrl?['/','/guide.html'].map(route=>`<url><loc>${publicUrl}${route}</loc></url>`).join(''):''}</urlset>`);
 await rm(path.join(root,'dist'),{recursive:true,force:true});await mkdir(path.join(root,'dist'));await cp(path.join(root,'site'),path.join(root,'dist'),{recursive:true});
 if(publicUrl){
  let html=await readFile(path.join(root,'dist/index.html'),'utf8');
@@ -16,5 +16,8 @@ if(publicUrl){
  html=html.replace('<meta property="og:image" content="/assets/brand/social.png">',`<meta property="og:image" content="${publicUrl}/assets/brand/social.png">`);
  html=html.replace('</head>',`<link rel="canonical" href="${publicUrl}/"><meta property="og:url" content="${publicUrl}/"><script type="application/ld+json">${JSON.stringify(structured)}</script></head>`);
  await writeFile(path.join(root,'dist/index.html'),html);
+ let guide=await readFile(path.join(root,'dist/guide.html'),'utf8');
+ guide=guide.replace('<body>',`<meta name="description" content="Install Narrate, choose narration languages, set up a compatible local voice model, record your voice and audition it before rendering a video."><link rel="canonical" href="${publicUrl}/guide.html"><link rel="icon" href="/assets/brand/favicon.svg" type="image/svg+xml"><body>`);
+ await writeFile(path.join(root,'dist/guide.html'),guide);
 }
 console.log('Static site built. '+films.filter(f=>f.video).length+' playable films; '+films.length+' collection entries.');
