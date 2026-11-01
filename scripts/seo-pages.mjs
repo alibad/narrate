@@ -2,7 +2,7 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import path from 'node:path';
 import {escapeHtml as e,filmCard} from '../site/gallery-view.js';
 
-export const footer = `<footer class="wrap footer"><a class="wordmark" href="/" aria-label="Narrate home"><img src="/assets/brand/mark.svg" alt="" width="28" height="28">narrate</a><p>A <a href="https://www.humanquest.net/">Human Quest</a> project. Made to be understood.</p><a class="quiet-link" href="https://www.humanquest.net/ai-patterns">Explore AI Patterns ↗</a></footer>`;
+export const footer = `<div class="wrap hq-band"><hq-footer current="narrate" theme="light"><a class="hq-fallback" href="https://www.humanquest.net/?ref=narrate">A Human Quest AI pattern · humanquest.net</a></hq-footer><script src="https://www.humanquest.net/embed/hq-footer.js" defer></script></div><footer class="wrap footer"><a class="wordmark" href="/" aria-label="Narrate home"><img src="/assets/brand/mark.svg" alt="" width="28" height="28">narrate</a><p>A <a href="https://www.humanquest.net/">Human Quest</a> project. Made to be understood.</p><a class="quiet-link" href="https://www.humanquest.net/ai-patterns">Explore AI Patterns ↗</a></footer>`;
 const json = value => JSON.stringify(value).replace(/</g,'\\u003c');
 const uploaded = '2026-11-01T14:27:44+03:00';
 
