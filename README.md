@@ -20,10 +20,16 @@ interface has a dark editing-suite layout, live recording bars that build as you
 speak, saved-audio waveforms, playback cursors, clear reference labels and motion
 that respects reduced-motion settings.
 
-Local speech adapters require Apple Silicon macOS, Python 3.12 with MLX-Audio
-0.5.1, and FFmpeg. The core renderer supports supplied audio on other platforms.
-Weights download separately. No cloud speech key is required. See the bundled
-`references/local-studio.md` for the agent's environment setup procedure.
+The voice studio runs on Apple Silicon macOS (Python 3.12 with MLX-Audio 0.5.1:
+OmniVoice, Chatterbox Multilingual and Qwen3-TTS Base) or on Windows and Linux
+with an NVIDIA GPU (CUDA PyTorch with chatterbox-tts: Chatterbox Multilingual).
+Both need FFmpeg. The core renderer runs anywhere with Python, Pillow and
+FFmpeg, and also accepts supplied audio. Weights download separately. No cloud
+speech key is required. See the bundled `references/local-studio.md` for the
+agent's environment setup procedure.
+
+In Claude Code, install the skill at `~/.claude/skills/narrate-video` and start
+with `/narrate-video`; in Codex, use `$narrate-video`.
 
 ```sh
 PYTHON=/path/to/audio-python sh skill/narrate-video/scripts/verify.sh
@@ -70,9 +76,11 @@ eight collection languages; Bengali and Urdu need a separate fluent review.
 ## Local verification and release
 
 `npm run verify` checks selection policy, navigation, assets, real video streams,
-captions and the absence of hosted workflows. The bundled skill has 35 local
-behavioral tests, including CJK wrapping, caption sizing, reference preservation,
-partial model downloads and local stylesheet delivery.
+captions and the absence of hosted workflows. The bundled skill has 45 local
+behavioral tests, including CJK wrapping, caption sizing, missing-glyph checks,
+reference preservation, partial model downloads, the NVIDIA model catalog,
+crossfade timing and local stylesheet delivery. On Windows the symlink test
+skips unless the account may create symlinks.
 
 Deploy local build output through the configured Vercel project; no GitHub
 Actions or automatic Git deployment is used. Set `PUBLIC_SITE_URL` only to a
