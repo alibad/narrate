@@ -12,7 +12,7 @@ from pathlib import Path
 SCRIPTS=Path(__file__).resolve().parents[1]/'scripts'
 sys.path.insert(0,str(SCRIPTS))
 from voice import synthesize,compose
-from qa import compare
+from qa import compare,inspect
 from studio import build
 from render import prepare,render,probe
 
@@ -62,6 +62,22 @@ class VoiceTests(unittest.TestCase):
         for a,b in [('Do not send it.','Do send it.'),('Send two files.','Send three files.'),('Click save then close.','Click close then save.'),('Go go now.','Go now.')]:
             self.assertFalse(compare(a,b)['exactOrderedMatch'])
         self.assertTrue(compare('Save the file.','save the file!')['exactOrderedMatch'])
+
+    def test_english_digits_compare_as_the_spoken_words(self):
+        heard='We made over 2,000 commits; 71% landed in 3.5 weeks.'
+        self.assertTrue(compare('We made over two thousand commits; seventy-one percent landed in three point five weeks.',heard,'en')['exactOrderedMatch'])
+        self.assertFalse(compare('Send two files.','Send 3 files.','en')['exactOrderedMatch'])
+        self.assertFalse(compare('Send two thousand files.','Send 2,000 files.')['exactOrderedMatch'],'Other languages keep digits literal')
+
+    def test_landscape_export_gets_a_landscape_contact_sheet(self):
+        from PIL import Image
+        Image.new('RGB',(640,360),'#335566').save(self.root/'still.png')
+        plan=dict(version=1,width=640,height=360,fps=30,voice=dict(provider='test',model='tone-fixture',revision='1',name='not-speech',language='en'),
+                  scenes=[dict(kind='still',status='demonstration',title='Hold',visual='still.png',audio='1.wav',say='Synthetic tone.',captions=[dict(start=0,end=.7,text='Synthetic tone.')])])
+        (self.root/'plan.json').write_text(json.dumps(plan),encoding='utf-8')
+        render(self.root/'plan.json',self.root/'cut')
+        inspect(self.root/'cut/walkthrough.mp4',self.root/'cut/evidence.json',self.root/'qa')
+        with Image.open(self.root/'qa/contact-sheet.jpg') as sheet:self.assertGreater(sheet.width,sheet.height)
 
     def test_audition_escapes_content_and_keeps_audio(self):
         spec=self.root/'audition.json';spec.write_text(json.dumps({'takes':[dict(name='<unsafe>',provider='test',model='tone',revision='1',language='en',text='Synthetic tone, not speech.',audio='0.wav')]}),encoding='utf-8')
