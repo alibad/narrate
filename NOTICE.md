@@ -19,6 +19,11 @@ and local narration were created for this collection. Personal voice-reference
 recordings are not distributed. The film pages retain their specific source
 and review notices; the code license does not replace third-party media terms.
 
+Language flags in the studio and on the website are SVGs from flag-icons 7.2.3
+(https://github.com/lipis/flag-icons, MIT, © Panayiotis Lipiridis); its license
+is included next to them. Spain uses the plain civil flag. A flag marks one place
+where a language is widely spoken, not who speaks it.
+
 Narrate's ribbon/frame mark was productionized from an image-generated logo
 exploration. The chosen mark, icon and social artwork are included in the
 website source. Brand use must not suggest endorsement of unrelated projects.

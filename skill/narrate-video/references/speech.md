@@ -5,6 +5,9 @@ language-first workflow. The command/preset adapter and static audition page bel
 optional alternatives, used only when explicitly chosen by the user.
 
 The core needs Python 3.12+, Pillow with RAQM for Arabic, FFmpeg and ffprobe.
+On Windows, Pillow's wheels include RAQM but not the FriBiDi library it loads;
+put a FriBiDi DLL on `PATH` and confirm `PIL.features.check("raqm")` before
+rendering Arabic captions.
 Use an isolated existing environment or explicitly install `requirements.txt`.
 The studio downloads only a selected pinned model after setup is started. Core rendering does not install or download dependencies. Audio can be recorded by a human
 or supplied by any reviewed synthesis tool.

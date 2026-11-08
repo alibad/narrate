@@ -6,7 +6,17 @@
     "omni_id": "en",
     "rtl": false,
     "prompt": "I am recording my voice to make clear, natural narration. Each sentence sounds like me.",
-    "sample": "This is my voice, ready to tell the next story."
+    "sample": "This is my voice, ready to tell the next story.",
+    "flag": "gb",
+    "speechLocale": "en-US",
+    "pronunciation": {
+      "latin": "Eye am ree-KOR-ding my voys tuh mayk kleer, NACH-er-ul nuh-RAY-shun. Eech SEN-tens sowndz lyk mee.",
+      "note": "Approximate English sound guide; stress is marked with capitals. Keep your own comfortable accent."
+    },
+    "samplePronunciation": {
+      "latin": "This iz my voys, RED-ee tuh tel thuh nekst STOR-ee.",
+      "note": "Approximate English sounds; keep your own comfortable accent."
+    }
   },
   {
     "code": "ar",
@@ -15,7 +25,17 @@
     "omni_id": "arb",
     "rtl": true,
     "prompt": "أسجّل صوتي لصناعة تعليق واضح وطبيعي. أتحدث بهدوء وبسرعتي المعتادة، مع وقفة قصيرة بين الأفكار.",
-    "sample": "هذا صوتي، جاهز لرواية القصة القادمة."
+    "sample": "هذا صوتي، جاهز لرواية القصة القادمة.",
+    "flag": "sa",
+    "speechLocale": "ar-001",
+    "pronunciation": {
+      "latin": "Usajjilu ṣawtī li-ṣināʿati taʿlīqin wāḍiḥin wa-ṭabīʿī. Ataḥaddathu bi-hudūʾin wa-bi-surʿatī al-muʿtādah, maʿa waqfatin qaṣīratin bayna al-afkār.",
+      "note": "Approximate Standard Arabic transliteration. ā/ī/ū are long vowels; ʿ and ḥ need the audio example. Spoken case endings may vary."
+    },
+    "samplePronunciation": {
+      "latin": "Hādhā ṣawtī, jāhizun li-riwāyati al-qiṣṣati al-qādimah.",
+      "note": "Approximate Standard Arabic transliteration. ā/ī are long vowels; listen for dh, ṣ and q. Spoken case endings may vary."
+    }
   },
   {
     "code": "es",
@@ -24,7 +44,17 @@
     "omni_id": "es",
     "rtl": false,
     "prompt": "Estoy grabando mi voz para crear una narración clara y natural. Hablo con calma y a mi ritmo habitual.",
-    "sample": "Esta es mi voz, lista para contar la próxima historia."
+    "sample": "Esta es mi voz, lista para contar la próxima historia.",
+    "flag": "es",
+    "speechLocale": "es-ES",
+    "pronunciation": {
+      "latin": "Es-TOY grah-BAHN-doh mee bohs PAH-rah kreh-AHR OO-nah nah-rrah-SYOHN KLAH-rah ee nah-too-RAHL. AH-bloh kohn KAHL-mah ee ah mee REET-moh ah-bee-twahl.",
+      "note": "Approximate Spanish sounds, using Latin American s in narración. Listen for your example’s regional pronunciation; rr is rolled."
+    },
+    "samplePronunciation": {
+      "latin": "ES-tah es mee bohs, LEES-tah PAH-rah kohn-TAHR lah PROK-see-mah ees-TOH-ryah.",
+      "note": "Approximate Spanish sounds. Regional accents vary; keep the vowels short and clear."
+    }
   },
   {
     "code": "fr",
@@ -33,7 +63,17 @@
     "omni_id": "fr",
     "rtl": false,
     "prompt": "Je prête ma voix à une narration claire et naturelle. Je parle calmement, à mon rythme habituel.",
-    "sample": "Voici ma voix, prête à raconter une nouvelle histoire."
+    "sample": "Voici ma voix, prête à raconter une nouvelle histoire.",
+    "flag": "fr",
+    "speechLocale": "fr-FR",
+    "pronunciation": {
+      "latin": "Zhuh pret mah vwah ah oon nah-rah-SYOHN klehr ay nah-too-REL. Zhuh parl kahlm-MAHN, ah mohn reetm ah-bee-too-EL.",
+      "note": "Approximate French sounds. zh is the sound in measure; nasal vowels and the French u need the audio example."
+    },
+    "samplePronunciation": {
+      "latin": "Vwah-SEE mah vwah, pret ah rah-kohn-TAY oon noo-VEL ees-TWAHR.",
+      "note": "Approximate French sounds. Nasal vowels and the French u need the audio example."
+    }
   },
   {
     "code": "de",
@@ -42,7 +82,13 @@
     "omni_id": "de",
     "rtl": false,
     "prompt": "Ich nehme meine Stimme für eine klare und natürliche Erzählung auf. Ich spreche ruhig und in meinem gewohnten Tempo.",
-    "sample": ""
+    "sample": "",
+    "flag": "de",
+    "speechLocale": "de-DE",
+    "pronunciation": {
+      "latin": "Ikh NAY-muh MY-nuh SHTIM-muh fewr EYE-nuh KLAH-ruh oont nah-TEWR-likh-uh er-TSAY-loong owf. Ikh SHPREH-khuh ROO-ikh oont in MY-nem guh-VOHN-ten TEM-poh.",
+      "note": "Approximate German sounds. kh stands for the soft German ch; ü/ö and final consonants need the audio example."
+    }
   },
   {
     "code": "it",
@@ -51,7 +97,13 @@
     "omni_id": "it",
     "rtl": false,
     "prompt": "Registro la mia voce per creare una narrazione chiara e naturale. Parlo con calma, al mio ritmo abituale.",
-    "sample": ""
+    "sample": "",
+    "flag": "it",
+    "speechLocale": "it-IT",
+    "pronunciation": {
+      "latin": "Reh-JEES-troh lah mee-ah VOH-cheh pehr kreh-AH-reh OO-nah nar-rah-TSYOH-neh KYAH-rah eh nah-too-RAH-leh. PAR-loh kohn KAHL-mah, ahl MEE-oh REET-moh ah-bee-too-AH-leh.",
+      "note": "Approximate Italian sounds. Keep vowels clear and give doubled consonants a little extra time."
+    }
   },
   {
     "code": "pt",
@@ -60,7 +112,13 @@
     "omni_id": "pt",
     "rtl": false,
     "prompt": "Estou gravando minha voz para criar uma narração clara e natural. Falo com calma, no meu ritmo habitual.",
-    "sample": ""
+    "sample": "",
+    "flag": "pt",
+    "speechLocale": "pt-BR",
+    "pronunciation": {
+      "latin": "Es-TOH grah-VAHN-doo mee-ah VOHZ PAH-rah kree-AHR OO-mah nah-hah-SOW klah-rah ee nah-too-RAHW. FAH-loo kohng KAHL-mah, noh mew REET-moo ah-bee-too-AHW.",
+      "note": "Approximate Brazilian Portuguese sounds. ão and final m are nasal; European Portuguese has a different rhythm and vowel system."
+    }
   },
   {
     "code": "zh",
@@ -69,7 +127,13 @@
     "omni_id": "zh",
     "rtl": false,
     "prompt": "我正在录制自己的声音，用来制作清晰自然的旁白。我会按照平时的语速说话，在句子之间稍作停顿。",
-    "sample": ""
+    "sample": "",
+    "flag": "cn",
+    "speechLocale": "zh-CN",
+    "pronunciation": {
+      "latin": "Wǒ zhèngzài lùzhì zìjǐ de shēngyīn, yòng lái zhìzuò qīngxī zìrán de pángbái. Wǒ huì ànzhào píngshí de yǔsù shuōhuà, zài jùzi zhījiān shāo zuò tíngdùn.",
+      "note": "Mandarin pinyin: tone marks are essential. Pinyin letters such as q, x and zh are not pronounced as English letters."
+    }
   },
   {
     "code": "ja",
@@ -78,7 +142,13 @@
     "omni_id": "ja",
     "rtl": false,
     "prompt": "自然でわかりやすいナレーションを作るために、自分の声を録音しています。いつもの速さで、落ち着いて話します。",
-    "sample": ""
+    "sample": "",
+    "flag": "jp",
+    "speechLocale": "ja-JP",
+    "pronunciation": {
+      "latin": "Shizen de wakariyasui narēshon o tsukuru tame ni, jibun no koe o rokuon shite imasu. Itsumo no hayasa de, ochitsuite hanashimasu.",
+      "note": "Approximate Japanese romanization. ē is a long vowel; keep syllables even and listen for pitch and light or unvoiced vowels."
+    }
   },
   {
     "code": "ko",
@@ -86,8 +156,14 @@
     "native": "한국어",
     "omni_id": "ko",
     "rtl": false,
-    "prompt": "명확하고 자연스러운 내레이션을 만들기 위해 제 목소리를 녹음하고 있습니다. 평소의 속도로 차분하게 말합니다。",
-    "sample": ""
+    "prompt": "명확하고 자연스러운 내레이션을 만들기 위해 제 목소리를 녹음하고 있습니다. 평소의 속도로 차분하게 말합니다.",
+    "sample": "",
+    "flag": "kr",
+    "speechLocale": "ko-KR",
+    "pronunciation": {
+      "latin": "Myeonghwak-hago jayeonseureoun naereisyeoneul mandeulgi wihae je moksorireul nogeumhago itseumnida. Pyeongso-ui sokdoro chabunhage malhamnida.",
+      "note": "Approximate Korean romanization. eo and eu each represent a single vowel; consonants can change when syllables join."
+    }
   },
   {
     "code": "hi",
@@ -96,7 +172,13 @@
     "omni_id": "hi",
     "rtl": false,
     "prompt": "मैं स्पष्ट और स्वाभाविक वर्णन के लिए अपनी आवाज़ रिकॉर्ड कर रहा हूँ। मैं अपनी सामान्य गति से शांति से बोलता हूँ।",
-    "sample": ""
+    "sample": "",
+    "flag": "in",
+    "speechLocale": "hi-IN",
+    "pronunciation": {
+      "latin": "Main spasht aur svaabhaavik varnan ke liye apnee aavaaz rikord kar rahaa hoon. Main apnee saamaanya gati se shaanti se boltaa hoon.",
+      "note": "Approximate Hindi sounds. aa/ee show long vowels; aspirated and retroflex consonants need the audio. This passage uses masculine verb forms."
+    }
   },
   {
     "code": "ru",
@@ -105,7 +187,13 @@
     "omni_id": "ru",
     "rtl": false,
     "prompt": "Я записываю свой голос для ясного и естественного рассказа. Я говорю спокойно, в привычном темпе.",
-    "sample": ""
+    "sample": "",
+    "flag": "ru",
+    "speechLocale": "ru-RU",
+    "pronunciation": {
+      "latin": "Ya za-PEE-sy-va-yu svoy GO-las dlya YAS-na-va ee yes-TYES-tven-na-va ras-KA-za. Ya ga-va-RYU spa-KOY-na, f pri-VYCH-nam TYEM-pye.",
+      "note": "Approximate Russian sounds with stressed syllables capitalized. Soft consonants and reduced vowels need the audio example."
+    }
   },
   {
     "code": "tr",
@@ -113,8 +201,14 @@
     "native": "Türkçe",
     "omni_id": "tr",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Doğal ve anlaşılır bir anlatım için sesimi kaydediyorum. Her zamanki hızımda, sakin bir şekilde konuşuyorum.",
+    "sample": "",
+    "flag": "tr",
+    "speechLocale": "tr-TR",
+    "pronunciation": {
+      "latin": "Doh-AHL veh ahn-lah-shuh-LUHR beer ahn-lah-TUHM ee-CHEEN seh-see-mee kye-deh-dee-YOH-room. Hehr zah-MAHN-kee huh-ZUHM-dah, sah-KEEN beer sheh-KEEL-deh koh-noo-SHOO-yoh-room.",
+      "note": "Approximate Turkish sounds. ı is an unrounded back vowel; ğ usually lengthens the preceding vowel rather than sounding like English g."
+    }
   },
   {
     "code": "nl",
@@ -122,8 +216,14 @@
     "native": "Nederlands",
     "omni_id": "nl",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Ik neem mijn stem op voor een helder en natuurlijk verhaal. Ik spreek rustig, in mijn eigen tempo.",
+    "sample": "",
+    "flag": "nl",
+    "speechLocale": "nl-NL",
+    "pronunciation": {
+      "latin": "Ik naym mine stem op vohr uhn HEL-der en nah-TEWR-luk ver-HAHL. Ik sprayk RUS-tukh, in mine EYE-ghun TEM-poh.",
+      "note": "Approximate Dutch sounds. ui, ij and g/ch have no exact English equivalent; follow the audio for those sounds."
+    }
   },
   {
     "code": "pl",
@@ -131,8 +231,14 @@
     "native": "Polski",
     "omni_id": "pl",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Nagrywam swój głos, aby opowiadać jasno i naturalnie. Mówię spokojnie, w swoim zwykłym tempie.",
+    "sample": "",
+    "flag": "pl",
+    "speechLocale": "pl-PL",
+    "pronunciation": {
+      "latin": "Nah-GRIH-vahm svooy gwohs, AH-bih oh-poh-VYAH-dach YAHS-noh ee nah-too-RAHL-nyeh. MOO-vyeh spoh-KOY-nyeh, f SVOH-eem ZVIK-wim TEM-pyeh.",
+      "note": "Approximate Polish sounds. ł sounds like English w; ś/ć and sz/cz are different sounds. Listen for nasal vowels and consonant clusters."
+    }
   },
   {
     "code": "sv",
@@ -140,8 +246,14 @@
     "native": "Svenska",
     "omni_id": "sv",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Jag spelar in min röst för en tydlig och naturlig berättelse. Jag talar lugnt, i min vanliga takt.",
+    "sample": "",
+    "flag": "se",
+    "speechLocale": "sv-SE",
+    "pronunciation": {
+      "latin": "Yah SPEH-lar in meen roest foer en TEWD-lig ok nah-TEWR-lig beh-RET-el-seh. Yah TAH-lar loongt, ee meen VAHN-li-gah takt.",
+      "note": "Approximate Swedish sounds. ö and y need the audio example; vowel length and pitch accent are not fully shown here."
+    }
   },
   {
     "code": "da",
@@ -149,8 +261,14 @@
     "native": "Dansk",
     "omni_id": "da",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Jeg optager min stemme til en klar og naturlig fortælling. Jeg taler roligt, i mit sædvanlige tempo.",
+    "sample": "",
+    "flag": "dk",
+    "speechLocale": "da-DK",
+    "pronunciation": {
+      "latin": "Yai OP-tay-er meen STEM-eh til en klahr oh nah-TOOR-li for-TEL-ing. Yai TAY-ler ROH-lit, ee mit SETH-vahn-li TEM-poh.",
+      "note": "Approximate Danish sounds. Soft d, reduced syllables and stød cannot be represented precisely with English spelling; use the audio as your main guide."
+    }
   },
   {
     "code": "fi",
@@ -158,8 +276,14 @@
     "native": "Suomi",
     "omni_id": "fi",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Tallennan ääneni selkeää ja luonnollista kerrontaa varten. Puhun rauhallisesti, omaan tavalliseen tahtiini.",
+    "sample": "",
+    "flag": "fi",
+    "speechLocale": "fi-FI",
+    "pronunciation": {
+      "latin": "TAHL-len-nahn AA-neh-nee SEL-keh-aa yah LOO-on-nohl-lees-tah KER-rohn-tahh VAR-ten. POO-hoon ROW-hahl-lee-ses-tee, OH-mahn TAH-vahl-lee-sehn TAHH-tee-nee.",
+      "note": "Approximate Finnish sounds. Stress is on the first syllable; doubled letters are longer, and ä/ö need the audio example."
+    }
   },
   {
     "code": "no",
@@ -167,8 +291,14 @@
     "native": "Norsk",
     "omni_id": "no",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Jeg tar opp stemmen min for en klar og naturlig fortelling. Jeg snakker rolig, i mitt vanlige tempo.",
+    "sample": "",
+    "flag": "no",
+    "speechLocale": "nb-NO",
+    "pronunciation": {
+      "latin": "Yai tahr op STEM-en meen for en klahr oh nah-TEWR-li for-TEL-ing. Yai SNAHK-er ROO-li, ee mit VAHN-li TEM-poh.",
+      "note": "Approximate Norwegian Bokmål pronunciation. Dialects vary; vowel quality and pitch accent need the audio example."
+    }
   },
   {
     "code": "el",
@@ -176,8 +306,14 @@
     "native": "Ελληνικά",
     "omni_id": "el",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Ηχογραφώ τη φωνή μου για μια καθαρή και φυσική αφήγηση. Μιλάω ήρεμα, με τον συνηθισμένο μου ρυθμό.",
+    "sample": "",
+    "flag": "gr",
+    "speechLocale": "el-GR",
+    "pronunciation": {
+      "latin": "Ikhografó ti foní mou yia mia katharí ke fisikí afíyisi. Miláo írema, me ton sinithisméno mou rithmó.",
+      "note": "Approximate Greek transliteration; accents mark stress. th is like thin; kh and y before front vowels need the audio example."
+    }
   },
   {
     "code": "he",
@@ -185,8 +321,14 @@
     "native": "עברית",
     "omni_id": "he",
     "rtl": true,
-    "prompt": "",
-    "sample": ""
+    "prompt": "אני מקליט את הקול שלי כדי ליצור קריינות ברורה וטבעית. אני מדבר ברוגע, בקצב הרגיל שלי.",
+    "sample": "",
+    "flag": "il",
+    "speechLocale": "he-IL",
+    "pronunciation": {
+      "latin": "Ani maklít et hakól shelí kedéi litsór karyanút berurá vetevíit. Ani medabér beróga, bekétsev haragíl shelí.",
+      "note": "Approximate Modern Hebrew transliteration; accents mark stress. This passage uses masculine verb forms; listen for the Israeli r."
+    }
   },
   {
     "code": "ms",
@@ -194,8 +336,14 @@
     "native": "Bahasa Melayu",
     "omni_id": "ms",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Saya merakam suara saya untuk penceritaan yang jelas dan semula jadi. Saya bercakap dengan tenang, pada kelajuan biasa saya.",
+    "sample": "",
+    "flag": "my",
+    "speechLocale": "ms-MY",
+    "pronunciation": {
+      "latin": "SAH-yah meh-RAH-kahm soo-AH-rah SAH-yah OON-took pen-cheh-ree-TAH-ahn yahng jeh-LAHS dahn seh-MOO-lah jah-DEE. SAH-yah ber-CHAH-kahp deh-ngahn teh-NAHNG, pah-dah keh-lah-JOO-ahn bee-AH-sah SAH-yah.",
+      "note": "Approximate Malay sounds. c is like ch in chair; ng is one sound. Stress is light and varies with the sentence."
+    }
   },
   {
     "code": "sw",
@@ -203,8 +351,14 @@
     "native": "Kiswahili",
     "omni_id": "sw",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Ninarekodi sauti yangu ili kusimulia kwa uwazi na kwa kawaida. Ninazungumza kwa utulivu, kwa kasi yangu ya kawaida.",
+    "sample": "",
+    "flag": "tz",
+    "speechLocale": "sw-KE",
+    "pronunciation": {
+      "latin": "Nee-nah-reh-KOH-dee SAH-oo-tee YAH-ngoo EE-lee koo-see-moo-LEE-ah kwah oo-WAH-zee nah kwah kah-wah-EE-dah. Nee-nah-zoo-NGOOM-zah kwah oo-too-LEE-voo, kwah KAH-see YAH-ngoo yah kah-wah-EE-dah.",
+      "note": "Approximate Swahili sounds. Say each vowel clearly; stress is usually on the second-to-last syllable. Regional pronunciation may vary."
+    }
   },
   {
     "code": "id",
@@ -212,8 +366,14 @@
     "native": "Bahasa Indonesia",
     "omni_id": "id",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Saya merekam suara saya untuk narasi yang jelas dan alami. Saya berbicara dengan tenang, pada kecepatan biasa saya.",
+    "sample": "",
+    "flag": "id",
+    "speechLocale": "id-ID",
+    "pronunciation": {
+      "latin": "SAH-yah meh-REH-kahm soo-AH-rah SAH-yah OON-took nah-RAH-see yahng JEH-lahs dahn ah-LAH-mee. SAH-yah ber-bee-CHAH-rah deh-ngahn teh-NAHNG, pah-dah keh-cheh-PAH-tahn bee-AH-sah SAH-yah.",
+      "note": "Approximate Indonesian sounds. c is like ch in chair; ng is one sound. Stress is light; follow the example’s rhythm."
+    }
   },
   {
     "code": "ur",
@@ -221,8 +381,14 @@
     "native": "اردو",
     "omni_id": "ur",
     "rtl": true,
-    "prompt": "",
-    "sample": ""
+    "prompt": "میں صاف اور قدرتی بیان کے لیے اپنی آواز ریکارڈ کر رہا ہوں۔ میں اپنی معمول کی رفتار سے سکون سے بولتا ہوں۔",
+    "sample": "",
+    "flag": "pk",
+    "speechLocale": "ur-PK",
+    "pronunciation": {
+      "latin": "Main saaf aur qudratee bayaan ke liye apnee aavaaz rikaard kar rahaa hoon. Main apnee maamool kee raftaar se sukoon se boltaa hoon.",
+      "note": "Approximate Urdu sounds. aa/ee show long vowels; q, aspirated and retroflex sounds need the audio. This passage uses masculine verb forms."
+    }
   },
   {
     "code": "bn",
@@ -230,8 +396,14 @@
     "native": "বাংলা",
     "omni_id": "bn",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "স্পষ্ট ও স্বাভাবিক বর্ণনার জন্য আমি আমার কণ্ঠ রেকর্ড করছি। আমি শান্তভাবে, আমার স্বাভাবিক গতিতে কথা বলি।",
+    "sample": "",
+    "flag": "bd",
+    "speechLocale": "bn-IN",
+    "pronunciation": {
+      "latin": "Sposhto o shabhabik bornonar jonno ami amar kontho rekord korchhi. Ami shantobhabe, amar shabhabik gotite kotha boli.",
+      "note": "Approximate Bengali transliteration. o may be closer to the vowel in British English hot; aspirated consonants and regional vowels need the audio."
+    }
   },
   {
     "code": "ta",
@@ -239,8 +411,14 @@
     "native": "தமிழ்",
     "omni_id": "ta",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "தெளிவான இயல்பான விளக்கத்திற்காக என் குரலைப் பதிவு செய்கிறேன். என் வழக்கமான வேகத்தில் அமைதியாகப் பேசுகிறேன்.",
+    "sample": "",
+    "flag": "in",
+    "speechLocale": "ta-IN",
+    "pronunciation": {
+      "latin": "Thelivaana iyalbaana vilakkaththirkaaga en kuralaip padhivu seygiren. En vazhakkamaana vegaththil amaidhiyaagap pesugiren.",
+      "note": "Approximate Tamil transliteration. aa marks a long vowel; zh, retroflex consonants and written-versus-spoken endings need the audio example."
+    }
   },
   {
     "code": "vi",
@@ -248,8 +426,14 @@
     "native": "Tiếng Việt",
     "omni_id": "vi",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Tôi đang thu âm giọng nói của mình để kể chuyện rõ ràng và tự nhiên. Tôi nói bình tĩnh, với tốc độ quen thuộc.",
+    "sample": "",
+    "flag": "vn",
+    "speechLocale": "vi-VN",
+    "pronunciation": {
+      "latin": "Toy dahng thoo um zohng noy koo-uh ming deh keh choo-yen zaw zahng vah tuh nyeen. Toy noy bing ting, vuh-ee tok doh kwen thoo-ok.",
+      "note": "Approximate northern Vietnamese sounds only. Vietnamese spelling’s tone marks are essential and are not captured by this rough English guide; use the native text and audio."
+    }
   },
   {
     "code": "th",
@@ -257,8 +441,14 @@
     "native": "ไทย",
     "omni_id": "th",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "กำลังบันทึกเสียงเพื่อเล่าเรื่องอย่างชัดเจนและเป็นธรรมชาติ พูดอย่างผ่อนคลายด้วยความเร็วตามปกติ",
+    "sample": "",
+    "flag": "th",
+    "speechLocale": "th-TH",
+    "pronunciation": {
+      "latin": "Kamlang banthuek siang phuea lao rueang yang chatjen lae pen thammachat. Phut yang phon khlai duai khwam reo tam pokkati.",
+      "note": "Approximate Thai romanization without tone marks. Tones, vowel length and aspiration are essential; use the native text and audio as your main guides."
+    }
   },
   {
     "code": "uk",
@@ -266,8 +456,14 @@
     "native": "Українська",
     "omni_id": "uk",
     "rtl": false,
-    "prompt": "",
-    "sample": ""
+    "prompt": "Я записую свій голос для чіткої та природної розповіді. Я говорю спокійно, у звичному темпі.",
+    "sample": "",
+    "flag": "ua",
+    "speechLocale": "uk-UA",
+    "pronunciation": {
+      "latin": "Ya za-PY-su-yu svii HO-los dlia CHIT-koi ta pry-ROD-noi roz-PO-vi-di. Ya ho-vo-RIU spo-KII-no, u ZVYCH-no-mu TEM-pi.",
+      "note": "Approximate Ukrainian sounds with stress capitalized. Ukrainian г is a voiced h-like sound, and и differs from і; listen for those vowels."
+    }
   },
   {
     "code": "afb",
@@ -276,7 +472,13 @@
     "omni_id": "afb",
     "rtl": true,
     "prompt": "أسجّل صوتي عشان أسوي شرح واضح وطبيعي. أتكلم بهدوء وبنفس سرعتي المعتادة، وأوقف شوي بين الأفكار.",
-    "sample": ""
+    "sample": "",
+    "flag": "qa",
+    "speechLocale": "ar-QA",
+    "pronunciation": {
+      "latin": "Asajjil ṣawtī ʿashān asawwī sharḥ wāḍiḥ wa-ṭabīʿī. Atkallam bi-hudūʾ wa-bi-nafs surʿatī il-muʿtādah, wa-awqaf shway bayn il-afkār.",
+      "note": "Approximate Gulf Arabic transliteration; local varieties differ. A Standard Arabic example is not a Gulf dialect model. Use a dialect-matching example when available."
+    }
   },
   {
     "code": "arz",
@@ -285,6 +487,12 @@
     "omni_id": "arz",
     "rtl": true,
     "prompt": "بسجّل صوتي عشان أعمل شرح واضح وطبيعي. بتكلم بهدوء وبسرعتي العادية، وباخد وقفة صغيرة بين الأفكار.",
-    "sample": ""
+    "sample": "",
+    "flag": "eg",
+    "speechLocale": "ar-EG",
+    "pronunciation": {
+      "latin": "Basaggil ṣōti ʿashān aʿmil sharḥ wāḍiḥ wi-ṭabīʿi. Batkallim bi-hudūʾ wi-bi-surʿati il-ʿādiyya, wa-bākhud waʾfa ṣughayyara bēn il-afkār.",
+      "note": "Approximate Egyptian Arabic transliteration. g is hard as in go; ʾ is a glottal stop. A Standard Arabic example is not an Egyptian dialect model."
+    }
   }
 ]

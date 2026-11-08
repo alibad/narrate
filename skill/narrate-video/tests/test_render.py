@@ -39,7 +39,7 @@ class RenderTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def save(self):
-        self.path.write_text(json.dumps(self.plan))
+        self.path.write_text(json.dumps(self.plan), encoding="utf-8")
 
     def prepare(self, **kwargs):
         self.save()
@@ -76,14 +76,27 @@ class RenderTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "finite"):
             self.prepare()
 
-    def test_rejects_path_escape_and_symlink(self):
+    def test_rejects_path_escape(self):
         self.plan["scenes"][0]["visual"] = "../outside.png"
         with self.assertRaisesRegex(ValueError, "escapes"):
             self.prepare()
-        (self.root / "outside-link").symlink_to(SCRIPT)
+
+    def test_rejects_symlink_escape(self):
+        try:
+            (self.root / "outside-link").symlink_to(SCRIPT)
+        except OSError:
+            self.skipTest("this account cannot create symlinks (Windows without Developer Mode)")
         self.plan["scenes"][0]["visual"] = "outside-link"
         with self.assertRaisesRegex(ValueError, "escapes"):
             self.prepare()
+
+    def test_utf8_plan_and_missing_default_glyphs_fail_clearly(self):
+        # Pillow's built-in font has no é or em dash; that must stop the render, not draw boxes.
+        self.plan["scenes"][0]["captions"][0]["text"] = "Un café — merci."
+        with self.assertRaisesRegex(ValueError, "default font has no glyph for .*é"):
+            self.prepare()
+        self.plan["scenes"][0]["captions"][0]["text"] = "It’s “ready”."
+        self.prepare()
 
     def test_rejects_observed_without_evidence(self):
         self.plan["scenes"][0]["status"] = "observed"
@@ -95,10 +108,10 @@ class RenderTests(unittest.TestCase):
         self.save()
         dest = self.root / "preview"
         r.render(self.path, dest, silent_preview=True)
-        receipt = json.loads((dest / "evidence.json").read_text())
+        receipt = json.loads((dest / "evidence.json").read_text(encoding="utf-8"))
         self.assertTrue(receipt["preview"])
         self.assertEqual(receipt["frames"], 60)
-        self.assertNotIn(str(self.root), (dest / "evidence.json").read_text())
+        self.assertNotIn(str(self.root), (dest / "evidence.json").read_text(encoding="utf-8"))
         with self.assertRaisesRegex(ValueError, "already exists"):
             r.render(self.path, dest, silent_preview=True)
 
@@ -115,7 +128,7 @@ class RenderTests(unittest.TestCase):
         self.save()
         dest = self.root / "final"
         r.render(self.path, dest)
-        receipt = json.loads((dest / "evidence.json").read_text())
+        receipt = json.loads((dest / "evidence.json").read_text(encoding="utf-8"))
         self.assertEqual(receipt["frames"], 120)
         self.assertEqual(receipt["checks"]["fullPlayback"], "pending")
         video = dest / "walkthrough.mp4"
@@ -134,6 +147,55 @@ class RenderTests(unittest.TestCase):
         self.assertGreater(mean_change(frame(2.1, "c.png"), frame(2.8, "d.png")), .3)
         # The clip's last frame holds rather than looping or stretching the action.
         self.assertLess(mean_change(frame(3.2, "e.png"), frame(3.7, "f.png")), .15)
+
+    def test_opt_in_look_keeps_exact_timing(self):
+        # No header band, a chosen frame colour, a push-in on the first still and a crossfade into a red still.
+        Image.new("RGB", (900, 500), "#cb4f39").save(self.root / "red.png")
+        self.plan["scenes"].append({**self.plan["scenes"][0], "title": "A second hold", "visual": "red.png", "motion": "none"})
+        self.plan.update(header=False, background="#1e1e1e", stillMotion="push", transition={"type": "crossfade", "seconds": .4})
+        self.save()
+        dest = self.root / "styled"
+        r.render(self.path, dest)
+        receipt = json.loads((dest / "evidence.json").read_text(encoding="utf-8"))
+        self.assertEqual(receipt["frames"], 120)
+        self.assertEqual([s["motion"] for s in receipt["scenes"]], ["push", "none"])
+        self.assertEqual(receipt["presentation"]["header"], False)
+        frames = {}
+        def frame(t):
+            # Each time is extracted once: a second ffmpeg run onto the same file would stop at its overwrite prompt.
+            if t not in frames:
+                target = self.root / f"styled-{t}.png"
+                r.command(["ffmpeg", "-v", "error", "-ss", str(t), "-i", dest / "walkthrough.mp4", "-frames:v", "1", target])
+                frames[t] = Image.open(target).convert("RGB")
+            return frames[t]
+        def mean_change(a, b):
+            return sum(ImageStat.Stat(ImageChops.difference(a.crop((0, 0, 640, 302)), b.crop((0, 0, 640, 302)))).mean)/3
+        early = frame(.2)
+        # Without the header the visual starts at the top; the pillarbox uses the chosen colour.
+        self.assertGreater(sum(early.getpixel((320, 10))), 450)
+        self.assertTrue(all(abs(v - 30) < 8 for v in early.getpixel((4, 150))))
+        # The push-in moves the still; the plain red hold does not move.
+        self.assertGreater(mean_change(early, frame(1.8)), .3)
+        self.assertLess(mean_change(frame(2.6), frame(3.6)), .15)
+        # Mid-crossfade is neither the outgoing hold nor the incoming still.
+        middle = frame(2.2)
+        self.assertGreater(mean_change(middle, frame(1.95)), .3)
+        self.assertGreater(mean_change(middle, frame(2.6)), .3)
+
+    def test_opt_in_look_is_validated(self):
+        # A 1.35 s second scene (1 s of audio plus the hold) cannot take a 1 s crossfade.
+        self.plan["scenes"].append({**self.plan["scenes"][0], "minDuration": 0, "captions": [{"start": 0, "end": 1, "text": "Short."}]})
+        original = json.loads(json.dumps(self.plan))
+        for key, value, message in [("background", "teal", "background"), ("header", "no", "header"), ("stillMotion", "zoom", "stillMotion"),
+                                    ("transition", {"type": "wipe", "seconds": .4}, "transition"), ("transition", {"type": "crossfade", "seconds": 1}, "half the shortest")]:
+            self.plan = json.loads(json.dumps(original))
+            self.plan[key] = value
+            with self.assertRaisesRegex(ValueError, message):
+                self.prepare()
+        self.plan = original
+        self.plan["scenes"][0].update(kind="clip", visual="still.png", clipEnd=.04, motion="push")
+        with self.assertRaisesRegex(ValueError, "on a still"):
+            self.prepare()
 
     def test_rejects_silent_narration(self):
         with wave.open(str(self.root / "voice.wav"), "wb") as f:

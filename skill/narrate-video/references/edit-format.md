@@ -46,9 +46,32 @@ declaration; it cannot independently verify a provider or the spoken content.
 - `captionSize`: optional integer size in pixels, at least 16 and no greater than
   six percent of frame height. Use only after inspecting the actual caption
   rendering; overflow still fails. CJK text wraps without requiring spaces.
-- `font`: optional relative font file; required for non-Latin text. Use an
-  appropriately licensed font, inspect glyph coverage, and check RAQM for Arabic.
-  Fonts are not bundled. Default Latin text uses Pillow's built-in font.
+- `font`: optional relative font file. Pillow's built-in default covers plain
+  English only: it has no é, ñ, ü, en or em dash, or €. The renderer checks
+  every caption and title character against the font in use and names any
+  missing glyph, so supply an appropriately licensed font for accented Latin
+  and non-Latin text and inspect shaping. Fonts are not bundled. Arabic also
+  needs Pillow with RAQM (`PIL.features.check("raqm")`); on Windows that needs
+  the FriBiDi DLL on `PATH`, which Pillow's wheels do not include.
+
+### Optional look for a finished film
+
+All are off by default; the default output is unchanged.
+
+- `background`: `"#rrggbb"` frame colour around the visual, header and
+  captions. Match it to the material, for example dark chart backgrounds.
+- `header`: `false` hides the status and title band and gives its height to the
+  visual. The status still goes into `evidence.json`; say elsewhere (credits,
+  description) which parts are editorial or demonstration material.
+- `stillMotion`: `"push"` gives every still a slow 5% push-in. A scene's own
+  `motion` (`"push"` or `"none"`) overrides it. This is an editorial camera
+  move: a clip keeps its own movement, and a moving still must not be used to
+  imply product behaviour.
+- `transition`: `{"type": "crossfade", "seconds": 0.4}` (0.1 to 1, at most half
+  the shortest scene). Each scene still starts on its planned frame and fades
+  in over the previous scene's held last frame, so captions, the SRT and the
+  total length do not move. The first `seconds` of each scene are blended;
+  start an action clip after that.
 
 Header/caption zones sit outside the fitted UI. The renderer encodes once,
 strips container metadata, normalizes toward -18 LUFS and writes MP4, captions,

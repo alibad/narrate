@@ -9,7 +9,7 @@ def generate(text_path,output,language='en',endpoint='http://127.0.0.1:8765'):
     if url.scheme!='http' or url.hostname not in ('localhost','127.0.0.1') or url.username or url.password:
         raise ValueError('Use the selected local studio; this client has no cloud endpoint')
     if output.exists():raise ValueError('Narration output exists')
-    text=text_path.read_text().strip()
+    text=text_path.read_text(encoding='utf-8').strip()
     if not 1<=len(text)<=2400:raise ValueError('Keep each narration request within 2400 characters')
     with urllib.request.urlopen(endpoint+'/api/status',timeout=10)as r:status=json.load(r)
     c=status['config'];engine=c.get('engine');models=status.get('engines',{})
@@ -36,7 +36,7 @@ def generate(text_path,output,language='en',endpoint='http://127.0.0.1:8765'):
         if audio_peak(work/'speech.wav') < -55:raise ValueError('Local voice output is silent')
         model_info=next(m for m in status['plan']['models'] if m['id']==engine)
         receipt=dict(provider='local-voice-studio',engine=engine,model=model_info['repo'],revision=model_info['revision'],voice='saved-user-recording',referenceLanguage=reference,referenceSha256=reference_hash,language=language,cloned=True,fallback=False,audioSha256=digest(work/'speech.wav'),textSha256=digest(text_path),review='pending')
-        (work/'identity.json').write_text(json.dumps(receipt,indent=2))
+        (work/'identity.json').write_text(json.dumps(receipt,indent=2),encoding='utf-8')
         os.link(work/'identity.json',output.with_suffix('.identity.json'))
         try:os.link(work/'speech.wav',output)
         except Exception:

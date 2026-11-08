@@ -15,7 +15,7 @@ SCRIPTS=Path(__file__).resolve().parents[1]/'scripts'
 sys.path.insert(0,str(SCRIPTS))
 import studio_speech
 from voice import synthesize,compose
-from qa import compare
+from qa import compare,inspect
 from studio import build
 from render import prepare,render,probe
 
@@ -27,14 +27,14 @@ class VoiceTests(unittest.TestCase):
             with wave.open(str(self.root/f'{i}.wav'),'wb') as w:
                 w.setnchannels(1);w.setsampwidth(2);w.setframerate(48000)
                 w.writeframes(b''.join(struct.pack('<h',round(5000*math.sin(n*2*math.pi*300/48000)))for n in range(round(seconds*48000))))
-        self.text=self.root/'text.txt';self.text.write_text('Exact test phrase.')
+        self.text=self.root/'text.txt';self.text.write_text('Exact test phrase.',encoding='utf-8')
         self.cfg=self.root/'config.json'
 
     def tearDown(self):self.tmp.cleanup()
 
     def config(self,command):
         cfg=dict(provider='synthetic-test',model='tone-fixture',revision='1',network='none',languages=['en'],voices=['fixture'],command=command)
-        self.cfg.write_text(json.dumps(cfg));return cfg
+        self.cfg.write_text(json.dumps(cfg),encoding='utf-8');return cfg
 
     def test_unsupported_language_never_invokes_provider(self):
         marker=self.root/'invoked'
@@ -55,7 +55,7 @@ class VoiceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'exists'):synthesize(self.cfg,self.text,out,'en','fixture')
 
     def test_phrase_boundaries_follow_audio_duration(self):
-        spec=self.root/'phrases.json';spec.write_text(json.dumps({'phrases':[{'audio':'0.wav','text':'First phrase.'},{'audio':'1.wav','text':'Second phrase.'}]}))
+        spec=self.root/'phrases.json';spec.write_text(json.dumps({'phrases':[{'audio':'0.wav','text':'First phrase.'},{'audio':'1.wav','text':'Second phrase.'}]}),encoding='utf-8')
         result=compose(spec,self.root/'composed')
         self.assertAlmostEqual(result['captions'][1]['start'],.4,places=5)
         self.assertAlmostEqual(result['captions'][1]['end'],1.1,places=5)
@@ -81,11 +81,26 @@ class VoiceTests(unittest.TestCase):
         self.assertEqual(receipt['referenceLanguage'],'en');self.assertEqual(receipt['referenceSha256'],reference_hash)
         self.assertEqual(posts,[{'input':'Exact test phrase.','language':'ar','engine':'omnivoice','mine':True}])
         self.assertEqual((self.root/'accepted-ar.wav').read_bytes(),(self.root/'0.wav').read_bytes())
+    def test_english_digits_compare_as_the_spoken_words(self):
+        heard='We made over 2,000 commits; 71% landed in 3.5 weeks.'
+        self.assertTrue(compare('We made over two thousand commits; seventy-one percent landed in three point five weeks.',heard,'en')['exactOrderedMatch'])
+        self.assertFalse(compare('Send two files.','Send 3 files.','en')['exactOrderedMatch'])
+        self.assertFalse(compare('Send two thousand files.','Send 2,000 files.')['exactOrderedMatch'],'Other languages keep digits literal')
+
+    def test_landscape_export_gets_a_landscape_contact_sheet(self):
+        from PIL import Image
+        Image.new('RGB',(640,360),'#335566').save(self.root/'still.png')
+        plan=dict(version=1,width=640,height=360,fps=30,voice=dict(provider='test',model='tone-fixture',revision='1',name='not-speech',language='en'),
+                  scenes=[dict(kind='still',status='demonstration',title='Hold',visual='still.png',audio='1.wav',say='Synthetic tone.',captions=[dict(start=0,end=.7,text='Synthetic tone.')])])
+        (self.root/'plan.json').write_text(json.dumps(plan),encoding='utf-8')
+        render(self.root/'plan.json',self.root/'cut')
+        inspect(self.root/'cut/walkthrough.mp4',self.root/'cut/evidence.json',self.root/'qa')
+        with Image.open(self.root/'qa/contact-sheet.jpg') as sheet:self.assertGreater(sheet.width,sheet.height)
 
     def test_audition_escapes_content_and_keeps_audio(self):
-        spec=self.root/'audition.json';spec.write_text(json.dumps({'takes':[dict(name='<unsafe>',provider='test',model='tone',revision='1',language='en',text='Synthetic tone, not speech.',audio='0.wav')]}))
+        spec=self.root/'audition.json';spec.write_text(json.dumps({'takes':[dict(name='<unsafe>',provider='test',model='tone',revision='1',language='en',text='Synthetic tone, not speech.',audio='0.wav')]}),encoding='utf-8')
         out=self.root/'studio';build(spec,out)
-        text=(out/'index.html').read_text()
+        text=(out/'index.html').read_text(encoding='utf-8')
         self.assertIn('&lt;unsafe&gt;',text);self.assertNotIn('<unsafe>',text)
         self.assertEqual((out/'take-0.wav').read_bytes(),(self.root/'0.wav').read_bytes())
 

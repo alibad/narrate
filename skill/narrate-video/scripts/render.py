@@ -2,6 +2,7 @@
 """Offline, frame-counted walkthrough assembly. No network or capture driver."""
 from __future__ import annotations
 import argparse
+import functools
 import hashlib
 import json
 import math
@@ -9,11 +10,16 @@ import re
 import shutil
 import subprocess
 import tempfile
+import unicodedata
 from pathlib import Path
 
 
+PUSH = .05  # a still's optional push-in grows by 5% over its scene
+
+
 def command(args):
-    result = subprocess.run([str(a) for a in args], capture_output=True, text=True)
+    # No keyboard input: an ffmpeg prompt (such as "Overwrite? [y/N]") fails at once instead of waiting forever.
+    result = subprocess.run([str(a) for a in args], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if result.returncode:
         raise ValueError(f"{Path(str(args[0])).name} failed: {result.stderr[-1800:]}")
     return result.stdout
@@ -24,7 +30,7 @@ def probe(path):
 
 
 def audio_peak(path):
-    check = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(path), "-af", "volumedetect", "-vn", "-sn", "-dn", "-f", "null", "-"], capture_output=True, text=True)
+    check = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(path), "-af", "volumedetect", "-vn", "-sn", "-dn", "-f", "null", "-"], stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace")
     peak = re.search(r"max_volume: (-?(?:[0-9.]+|inf)) dB", check.stderr)
     if check.returncode or not peak:
         raise ValueError("Could not measure narration audio")
@@ -56,7 +62,7 @@ def asset(root, name):
 
 def prepare(plan_path, silent_preview=False):
     root = plan_path.resolve().parent
-    plan = json.loads(plan_path.read_text())
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
     if plan.get("version") != 1:
         raise ValueError("Expected plan version 1")
     width, height, fps = plan.get("width", 1920), plan.get("height", 1080), plan.get("fps", 30)
@@ -71,6 +77,18 @@ def prepare(plan_path, silent_preview=False):
         value = plan['captionSize']
         if type(value) is not int or not 16 <= value <= max(16, round(height*.06)):
             raise ValueError('captionSize must be a readable integer within the caption zone')
+    background = plan.get("background", "#101820")
+    if not isinstance(background, str) or not re.fullmatch(r"#[0-9a-fA-F]{6}", background):
+        raise ValueError('background must be a "#rrggbb" colour')
+    if not isinstance(plan.get("header", True), bool):
+        raise ValueError("header must be true or false")
+    transition = plan.get("transition")
+    if transition is not None and (not isinstance(transition, dict) or transition.get("type") != "crossfade" or isinstance(transition.get("seconds"), bool)
+                                   or not isinstance(transition.get("seconds"), (int, float)) or not .1 <= transition["seconds"] <= 1):
+        raise ValueError('transition must be {"type": "crossfade", "seconds": 0.1 to 1}')
+    still_motion = plan.get("stillMotion", "none")
+    if still_motion not in ("none", "push"):
+        raise ValueError('stillMotion must be "none" or "push"')
     font = asset(root, plan["font"]) if plan.get("font") else None
     voice = plan.get('voice', {})
     if not silent_preview and not all(isinstance(voice.get(k), str) and voice[k].strip() for k in ('provider','model','revision','name','language')):
@@ -82,6 +100,9 @@ def prepare(plan_path, silent_preview=False):
     for i, s in enumerate(scenes, 1):
         if s.get("kind") not in ("still", "clip"):
             raise ValueError(f"Scene {i}: kind must be still or clip")
+        motion = s.get("motion", still_motion if s["kind"] == "still" else "none")
+        if motion not in ("none", "push") or (motion == "push" and s["kind"] != "still"):
+            raise ValueError(f'Scene {i}: motion is "none", or "push" on a still; a clip keeps its own movement')
         status = s.get("status")
         if status not in ("observed", "demonstration", "editorial"):
             raise ValueError(f"Scene {i}: label the evidence status")
@@ -140,13 +161,17 @@ def prepare(plan_path, silent_preview=False):
         title = s.get("title", f"Scene {i}")
         if not isinstance(title, str) or not 1 <= len(title) <= 90:
             raise ValueError(f"Scene {i}: title must have 1 to 90 characters")
-        if not font and any(ord(c) > 255 for c in title + "".join(c["text"] for c in captions)):
-            raise ValueError("Supply a suitably licensed font for this script; inspect shaping in the result")
+        missing = missing_glyphs(title + "".join(c["text"] for c in captions), font)
+        if missing:
+            raise ValueError(f"Scene {i}: the {'supplied' if font else 'default'} font has no glyph for {' '.join(missing[:8])}; "
+                             "set \"font\" to a suitably licensed font that covers this text and inspect shaping in the result")
         if any('\u0600' <= c <= '\u06ff' for c in title + ''.join(c['text'] for c in captions)):
             from PIL import features
             if not features.check('raqm'):
                 raise ValueError('Arabic captions require Pillow RAQM shaping support')
-        prepared.append(dict(source={**s, "title": title}, visual=visual, audio=audio, seconds=duration, frames=frames, clipStart=start, clipEnd=end))
+        prepared.append(dict(source={**s, "title": title}, visual=visual, audio=audio, seconds=duration, frames=frames, clipStart=start, clipEnd=end, motion=motion))
+    if transition and len(prepared) > 1 and transition["seconds"] > min(p["seconds"] for p in prepared) / 2:
+        raise ValueError("transition is longer than half the shortest scene")
     return plan, prepared, font
 
 
@@ -156,6 +181,23 @@ def subtitle_time(seconds):
     m, ms = divmod(ms, 60000)
     s, ms = divmod(ms, 1000)
     return f"{h:02}:{m:02}:{s:02},{ms:03}"
+
+
+@functools.lru_cache(maxsize=8)
+def _glyph_probe(font_path):
+    from PIL import ImageFont
+    font = ImageFont.truetype(str(font_path), 32) if font_path else ImageFont.load_default(size=32)
+    def shape(ch):
+        mask = font.getmask(ch)
+        return mask.size, bytes(mask)
+    return shape, shape("￿")
+
+
+def missing_glyphs(text, font_path):
+    """Characters the font would draw as its missing-glyph box. Pillow's default font lacks even é and —."""
+    shape, notdef = _glyph_probe(font_path)
+    # Combining marks and format characters are drawn with their base; they cannot be judged alone.
+    return sorted({ch for ch in text if not ch.isspace() and unicodedata.category(ch)[0] not in "MC" and shape(ch) == notdef})
 
 
 def caption_lines(text, measure, max_width):
@@ -181,11 +223,16 @@ def caption_lines(text, measure, max_width):
     return lines
 
 
-def plate(path, scene, text, width, height, font_path, caption_size=None):
-    from PIL import Image, ImageDraw, ImageFont, ImageOps
-    hhead, hfoot = 2*round(height * .1/2), 2*round(height * .16/2)
-    canvas = Image.new("RGBA", (width, height), (16, 24, 32, 255))
-    if scene["source"]["kind"] == "still":
+def zones(height, header=True):
+    """Header and caption bands sit outside the visual, so neither ever covers it."""
+    return (2*round(height * .1/2) if header else 0), 2*round(height * .16/2)
+
+
+def plate(path, scene, text, width, height, font_path, caption_size=None, header=True, background="#101820"):
+    from PIL import Image, ImageColor, ImageDraw, ImageFont, ImageOps
+    hhead, hfoot = zones(height, header)
+    canvas = Image.new("RGBA", (width, height), ImageColor.getrgb(background) + (255,))
+    if scene["source"]["kind"] == "still" and scene["motion"] == "none":
         with Image.open(scene["visual"]) as raw:
             shot = ImageOps.exif_transpose(raw).convert("RGBA")
             if scene['source'].get('crop'): shot = shot.crop(scene['source']['crop'])
@@ -197,16 +244,17 @@ def plate(path, scene, text, width, height, font_path, caption_size=None):
     # A separate portrait composition keeps captions and focused UI legible on phones.
     size = caption_size or max(16, round(min(width*.055, height*.060)))
     font = ImageFont.truetype(str(font_path), size) if font_path else ImageFont.load_default(size=size)
-    titlesize = max(12, round(min(size*.85, hhead*.32)))
-    titlefont = ImageFont.truetype(str(font_path), titlesize) if font_path else ImageFont.load_default(size=titlesize)
-    title = scene["source"]["title"]
-    status = scene["source"]["status"].upper()
     margin = round(width * .025)
-    label = title
-    if draw.textlength(label, font=titlefont) > width - 2 * margin:
-        raise ValueError("Header overflows; shorten the scene title")
-    draw.text((margin, max(6, hhead*.15)), status, font=titlefont, fill='#85d4c5')
-    draw.text((margin, max(6, hhead*.53)), label, font=titlefont, fill="white")
+    if header:
+        titlesize = max(12, round(min(size*.85, hhead*.32)))
+        titlefont = ImageFont.truetype(str(font_path), titlesize) if font_path else ImageFont.load_default(size=titlesize)
+        title = scene["source"]["title"]
+        status = scene["source"]["status"].upper()
+        label = title
+        if draw.textlength(label, font=titlefont) > width - 2 * margin:
+            raise ValueError("Header overflows; shorten the scene title")
+        draw.text((margin, max(6, hhead*.15)), status, font=titlefont, fill='#85d4c5')
+        draw.text((margin, max(6, hhead*.53)), label, font=titlefont, fill="white")
     lines = caption_lines(text, lambda value: draw.textlength(value, font=font), width - 2*margin)
     y = height - hfoot + (hfoot - len(lines) * size * 1.25) / 2
     for line in lines:
@@ -222,6 +270,9 @@ def render(plan_path, destination, silent_preview=False):
         raise ValueError("Output directory already exists; choose a new directory")
     destination.parent.mkdir(parents=True, exist_ok=True)
     width, height, fps = plan.get("width", 1920), plan.get("height", 1080), plan.get("fps", 30)
+    header, background = plan.get("header", True), plan.get("background", "#101820")
+    hhead, hfoot = zones(height, header)
+    body, fill = height - hhead - hfoot, "0x" + background[1:]
     with tempfile.TemporaryDirectory(prefix="narrate-video-", dir=destination.parent) as workdir:
         work = Path(workdir)
         inputs, filters, concat, srt, receipt = [], [], [], [], []
@@ -241,22 +292,32 @@ def render(plan_path, destination, silent_preview=False):
                     continue
                 text = next((c["text"] for c in src.get("captions", []) if round(c["start"]*fps) <= a < round(c["end"]*fps)), "")
                 name = f"plate-{i}-{j}.png"
-                plate(work / name, s, text, width, height, font, plan.get('captionSize'))
+                plate(work / name, s, text, width, height, font, plan.get('captionSize'), header, background)
                 entries += [f"file '{name}'", f"option framerate {fps}", f"duration {(b-a)/fps:.9f}"]
                 last = name
             entries += [f"file '{last}'", f"option framerate {fps}"]
             listing = work / f"plates-{i}.ffconcat"
-            listing.write_text("\n".join(entries) + "\n")
+            listing.write_text("\n".join(entries) + "\n", encoding="utf-8")
             inputs += ["-f", "concat", "-safe", "0", "-i", listing]
             plate_index = input_index
             input_index += 1
             if src["kind"] == "clip":
                 inputs += ["-ss", str(s["clipStart"]), "-t", str(s["clipEnd"]-s["clipStart"]), "-i", s["visual"]]
-                hhead, hfoot = 2*round(height*.1/2), 2*round(height*.16/2)
-                body = height - hhead - hfoot
                 crop = src.get('crop')
                 cropfilter = f'crop={crop[2]-crop[0]}:{crop[3]-crop[1]}:{crop[0]}:{crop[1]},' if crop else ''
-                filters.append(f"[{input_index}:v]setpts=PTS-STARTPTS,{cropfilter}fps={fps},scale={width}:{body}:force_original_aspect_ratio=decrease:force_divisible_by=2,pad={width}:{body}:(ow-iw)/2:(oh-ih)/2:color=0x101820,pad={width}:{height}:0:{hhead}:color=0x101820,tpad=stop_mode=clone:stop_duration={s['seconds']},trim=end_frame={s['frames']}[base{i}]")
+                filters.append(f"[{input_index}:v]setpts=PTS-STARTPTS,{cropfilter}fps={fps},scale={width}:{body}:force_original_aspect_ratio=decrease:force_divisible_by=2,pad={width}:{body}:(ow-iw)/2:(oh-ih)/2:color={fill},pad={width}:{height}:0:{hhead}:color={fill},tpad=stop_mode=clone:stop_duration={s['seconds']},trim=end_frame={s['frames']}[base{i}]")
+                filters.append(f"[base{i}][{plate_index}:v]overlay=0:0:eof_action=repeat[composite{i}]")
+                vf = f"[composite{i}]"
+                input_index += 1
+            elif s["motion"] == "push":
+                from PIL import Image, ImageOps
+                still = work / f"still-{i}.png"
+                with Image.open(s["visual"]) as raw:
+                    shot = ImageOps.exif_transpose(raw).convert("RGB")
+                    (shot.crop(src["crop"]) if src.get("crop") else shot).save(still)
+                inputs += ["-loop", "1", "-framerate", fps, "-t", f"{s['frames']/fps:.6f}", "-i", still]
+                # An editorial camera move: upscale first so the slow push moves in sub-pixel steps instead of jittering.
+                filters.append(f"[{input_index}:v]scale={2*width}:{2*body}:force_original_aspect_ratio=decrease,pad={2*width}:{2*body}:(ow-iw)/2:(oh-ih)/2:color={fill},zoompan=z='1+{PUSH}*on/{s['frames']}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={width}x{body}:fps={fps},pad={width}:{height}:0:{hhead}:color={fill},trim=end_frame={s['frames']}[base{i}]")
                 filters.append(f"[base{i}][{plate_index}:v]overlay=0:0:eof_action=repeat[composite{i}]")
                 vf = f"[composite{i}]"
                 input_index += 1
@@ -270,14 +331,29 @@ def render(plan_path, destination, silent_preview=False):
             filters.append(f"[{input_index}:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,apad,atrim=end_sample={s['frames']*48000//fps},asetpts=PTS-STARTPTS[a{i}]")
             input_index += 1
             concat.append(f"[v{i}][a{i}]")
-            receipt.append({"scene": i+1, "title": src["title"], "kind": src["kind"], "status": src["status"], "start": clock, "end": clock+s["seconds"], "crop":src.get('crop'), "visualSha256": digest(s["visual"]), "audioSha256": digest(s["audio"]) if s["audio"] else None, "evidence": src.get("evidence", {}), "captureIdentityVerified": False})
+            receipt.append({"scene": i+1, "title": src["title"], "kind": src["kind"], "status": src["status"], "start": clock, "end": clock+s["seconds"], "crop":src.get('crop'), "motion": s["motion"], "visualSha256": digest(s["visual"]), "audioSha256": digest(s["audio"]) if s["audio"] else None, "evidence": src.get("evidence", {}), "captureIdentityVerified": False})
             clock += s["seconds"]
-        filters.append("".join(concat) + f"concat=n={len(scenes)}:v=1:a=1[v][voice]")
+        transition = plan.get("transition") if len(scenes) > 1 else None
+        if transition:
+            # Each scene but the last is extended by the fade with its final frame, so the next scene starts
+            # on its planned frame and fades in over that hold. Scene times, captions and the SRT do not move.
+            fade = round(transition["seconds"] * fps)
+            for i in range(len(scenes) - 1):
+                filters.append(f"[v{i}]tpad=stop={fade}:stop_mode=clone[e{i}]")
+            previous, offset = "e0", scenes[0]["frames"]
+            for i in range(1, len(scenes)):
+                out = "v" if i == len(scenes) - 1 else f"x{i}"
+                nxt = f"e{i}" if i < len(scenes) - 1 else f"v{i}"
+                filters.append(f"[{previous}][{nxt}]xfade=transition=fade:duration={fade/fps:.6f}:offset={offset/fps:.6f}[{out}]")
+                previous, offset = out, offset + scenes[i]["frames"]
+            filters.append("".join(f"[a{i}]" for i in range(len(scenes))) + f"concat=n={len(scenes)}:v=0:a=1[voice]")
+        else:
+            filters.append("".join(concat) + f"concat=n={len(scenes)}:v=1:a=1[v][voice]")
         filters.append("[voice]loudnorm=I=-18:TP=-2:LRA=11,aresample=48000[a]" if any(s["audio"] for s in scenes) else "[voice]anull[a]")
         graph = work / "graph.txt"
-        graph.write_text(";\n".join(filters))
+        graph.write_text(";\n".join(filters), encoding="utf-8")
         final = work / ("silent-preview.mp4" if silent_preview else "walkthrough.mp4")
-        command(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex_threads", "1", "-filter_complex", graph.read_text(), "-map", "[v]", "-map", "[a]", "-map_metadata", "-1", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-r", fps, "-c:a", "aac", "-ar", "48000", "-b:a", "160k", "-movflags", "+faststart", final])
+        command(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex_threads", "1", "-filter_complex", graph.read_text(encoding="utf-8"), "-map", "[v]", "-map", "[a]", "-map_metadata", "-1", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-r", fps, "-c:a", "aac", "-ar", "48000", "-b:a", "160k", "-movflags", "+faststart", final])
         command(["ffmpeg", "-v", "error", "-i", final, "-f", "null", "-"])
         actual = probe(final)
         vs = next(x for x in actual["streams"] if x["codec_type"] == "video")
@@ -286,10 +362,10 @@ def render(plan_path, destination, silent_preview=False):
         package = work / "result"
         package.mkdir()
         shutil.move(final, package / final.name)
-        (package / "captions.srt").write_text("\n".join(srt))
-        (package / "narration.txt").write_text("\n\n".join(f"{i+1}. {s['source']['title']}\n{s['source'].get('say', '')}" for i, s in enumerate(scenes)) + "\n")
+        (package / "captions.srt").write_text("\n".join(srt), encoding="utf-8")
+        (package / "narration.txt").write_text("\n\n".join(f"{i+1}. {s['source']['title']}\n{s['source'].get('say', '')}" for i, s in enumerate(scenes)) + "\n", encoding="utf-8")
         # No local filesystem paths or audio credentials are written to the receipt.
-        (package / "evidence.json").write_text(json.dumps({"version": 1, "preview": silent_preview, "voice":plan.get('voice'), "videoSha256":digest(package/final.name), "planSha256": digest(plan_path), "fontSha256": digest(font) if font else None, "fps": fps, "frames": sum(s["frames"] for s in scenes), "scenes": receipt, "checks": {"decode": "passed", "frameCount": "passed", "visualReview": "pending", "narrationReview": "pending", "fullPlayback": "pending"}}, indent=2))
+        (package / "evidence.json").write_text(json.dumps({"version": 1, "preview": silent_preview, "voice":plan.get('voice'), "videoSha256":digest(package/final.name), "planSha256": digest(plan_path), "fontSha256": digest(font) if font else None, "fps": fps, "frames": sum(s["frames"] for s in scenes), "presentation": {"header": header, "background": background, "transition": transition}, "scenes": receipt, "checks": {"decode": "passed", "frameCount": "passed", "visualReview": "pending", "narrationReview": "pending", "fullPlayback": "pending"}}, indent=2), encoding="utf-8")
         shutil.move(package, destination)
     return destination
 
