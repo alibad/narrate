@@ -81,6 +81,21 @@ class VoiceTests(unittest.TestCase):
         self.assertEqual(receipt['referenceLanguage'],'en');self.assertEqual(receipt['referenceSha256'],reference_hash)
         self.assertEqual(posts,[{'input':'Exact test phrase.','language':'ar','engine':'omnivoice','mine':True}])
         self.assertEqual((self.root/'accepted-ar.wav').read_bytes(),(self.root/'0.wav').read_bytes())
+    def test_studio_client_honors_explicit_english_reference_grant_without_fake_ar_approval(self):
+        reference_hash='e'*64
+        status={'config':{'engine':'omnivoice','voice':'mine','profileReady':True,'languages':['en','ar'],'accepted':{'en':{'id':'real-English','engine':'omnivoice','referenceSha256':reference_hash}},'sharedEnglishApproval':{'mode':'english-reference','engine':'omnivoice','referenceSha256':reference_hash,'acceptedEnglishId':'real-English'}},'engines':{'omnivoice':{'langs':['en','ar']}},'mine':{'en':{'sha256':reference_hash}},'effectiveReferences':{'en':'en','ar':'en'},'plan':{'models':[{'id':'omnivoice','repo':'synthetic-test/voice','revision':'test'}]}}
+        calls=[]
+        def response(request,timeout):
+            if isinstance(request,str):return io.BytesIO(json.dumps(status).encode())
+            calls.append(json.loads(request.data));audio=io.BytesIO(b'fixture');audio.headers={'X-Voice':'omnivoice; cloned=True; lang=ar','X-Voice-Reference-SHA256':reference_hash,'X-Voice-Reference-Language':'en'};return audio
+        def convert(args):Path(args[-1]).write_bytes((self.root/'0.wav').read_bytes())
+        with patch.object(studio_speech.urllib.request,'urlopen',response),patch.object(studio_speech,'command',convert):
+            receipt=studio_speech.generate(self.text,self.root/'shared-ar.wav','ar')
+        self.assertEqual(receipt['approvalScope'],'english-reference');self.assertEqual(receipt['referenceLanguage'],'en');self.assertNotIn('ar',status['config']['accepted'])
+        status['config']['sharedEnglishApproval']['acceptedEnglishId']='stale'
+        with patch.object(studio_speech.urllib.request,'urlopen',response),patch.object(studio_speech,'command',convert):
+            with self.assertRaisesRegex(ValueError,'Accept a fresh'):studio_speech.generate(self.text,self.root/'refused.wav','ar')
+        self.assertEqual(len(calls),1);self.assertFalse((self.root/'refused.wav').exists())
     def test_english_digits_compare_as_the_spoken_words(self):
         heard='We made over 2,000 commits; 71% landed in 3.5 weeks.'
         self.assertTrue(compare('We made over two thousand commits; seventy-one percent landed in three point five weeks.',heard,'en')['exactOrderedMatch'])

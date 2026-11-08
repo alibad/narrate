@@ -13,3 +13,12 @@ vm.runInContext('pending={lang:"ar",blob:{synthetic:true},url:"blob:synthetic",t
 await vm.runInContext('handle("save-recording",{disabled:false})',c);assert.equal(vm.runInContext('recordRef("ar")',c),'ar');assert.equal(vm.runInContext('recordRef("es")',c),'en');assert.equal(calls.filter(x=>x.path.startsWith('/api/reference?')).length,1);
 vm.runInContext('S.config.accepted={en:{engine:"omnivoice",referenceSha256:"english"},ar:{engine:"omnivoice",referenceSha256:"arabic"},es:{engine:"omnivoice",referenceSha256:"english"}}',c);assert.equal(vm.runInContext('accepted("ar")',c),true);vm.runInContext('S.mine.en.sha256="new-English"',c);assert.equal(vm.runInContext('accepted("en")',c),false);assert.equal(vm.runInContext('accepted("es")',c),false);assert.equal(vm.runInContext('accepted("ar")',c),true);
 assert.equal(calls.filter(x=>x.path==='/api/accept'||x.path==='/api/finish'||x.path==='/api/setup').length,0);console.log('Actual client script mock-DOM flow passes: English default, staged saved choice, pending new take, Use this one target-only commit; no microphone, generation or audition approval.');
+
+// Explicit shared-reference approval is distinct from per-language listening.
+vm.runInContext(`S.config.accepted.en={id:'actual-English-approval',engine:'omnivoice',referenceSha256:'new-English'};S.config.sharedEnglishApproval={mode:'english-reference',engine:'omnivoice',referenceSha256:'new-English',acceptedEnglishId:'actual-English-approval'};S.config.references={en:'en',ar:'en',es:'en'};S.effectiveReferences={en:'en',ar:'en',es:'en'};S.config.profileReady=true;auditionLang='es';go(5)`,c);
+assert.equal(vm.runInContext('shared("es")',c),true);assert.equal(vm.runInContext('accepted("ar")',c),true);
+assert(elements.get('#main').innerHTML.includes('English voice shared'));assert(elements.get('#main').innerHTML.includes('No more language auditions are required'));
+assert.equal(vm.runInContext('S.config.accepted.es.referenceSha256',c),'english');
+vm.runInContext('S.effectiveReferences.ar="ar";S.config.references.ar="ar"',c);assert.equal(vm.runInContext('shared("ar")',c),false);assert.equal(vm.runInContext('accepted("ar")',c),true);
+vm.runInContext('S.mine.en.sha256="replaced-English"',c);assert.equal(vm.runInContext('accepted("es")',c),false);
+console.log('Shared English grant renders readiness without creating target-language listening approvals; own overrides and stale English remain distinct.');

@@ -19,6 +19,9 @@ def generate(text_path,output,language='en',endpoint='http://127.0.0.1:8765'):
         raise ValueError('Add this language to your voice profile first; no language substitution')
     reference=status.get('effectiveReferences',{}).get(language) or c.get('references',{}).get(language) or language
     saved=status.get('mine',{}).get(reference);accepted=c.get('accepted',{}).get(language,{})
+    grant=c.get('sharedEnglishApproval',{});english=c.get('accepted',{}).get('en',{});approval_scope='language'
+    if reference=='en' and grant.get('mode')=='english-reference' and grant.get('engine')==engine and saved and grant.get('referenceSha256')==saved['sha256'] and grant.get('acceptedEnglishId') and grant.get('acceptedEnglishId')==english.get('id'):
+        accepted=english;approval_scope='english-reference'
     if not saved or accepted.get('engine')!=engine or accepted.get('referenceSha256')!=saved['sha256']:
         raise ValueError('The model or reference changed. Accept a fresh audition first')
     output.parent.mkdir(parents=True,exist_ok=True)
@@ -35,7 +38,7 @@ def generate(text_path,output,language='en',endpoint='http://127.0.0.1:8765'):
         command(['ffmpeg','-v','error','-i',work/'speech.mp3','-ar','48000','-ac','1',work/'speech.wav'])
         if audio_peak(work/'speech.wav') < -55:raise ValueError('Local voice output is silent')
         model_info=next(m for m in status['plan']['models'] if m['id']==engine)
-        receipt=dict(provider='local-voice-studio',engine=engine,model=model_info['repo'],revision=model_info['revision'],voice='saved-user-recording',referenceLanguage=reference,referenceSha256=reference_hash,language=language,cloned=True,fallback=False,audioSha256=digest(work/'speech.wav'),textSha256=digest(text_path),review='pending')
+        receipt=dict(approvalScope=approval_scope,provider='local-voice-studio',engine=engine,model=model_info['repo'],revision=model_info['revision'],voice='saved-user-recording',referenceLanguage=reference,referenceSha256=reference_hash,language=language,cloned=True,fallback=False,audioSha256=digest(work/'speech.wav'),textSha256=digest(text_path),review='pending')
         (work/'identity.json').write_text(json.dumps(receipt,indent=2),encoding='utf-8')
         os.link(work/'identity.json',output.with_suffix('.identity.json'))
         try:os.link(work/'speech.wav',output)

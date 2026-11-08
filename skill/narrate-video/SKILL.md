@@ -36,14 +36,17 @@ successful demonstration.
 
 **Open the recording studio first** ([local studio](references/local-studio.md)).
 The user chooses languages, reviews compatible cloning models, starts setup,
-records or reuses their voice, and accepts an audition in every selected
-language. Explain the recommendation and allow eligible overrides. Use the
+records or reuses their voice, then either accepts per-language auditions or
+explicitly shares their already-accepted English reference across the selected
+languages. Explain the recommendation and allow eligible overrides. Use the
 accepted voice profile. Do not replace this with a static audition page or a
 preset. The first committed English recording supplies other languages unless
 an explicit or language-specific recording exists. New takes and reference
 choices remain previews until **Use this one**; only that language changes.
-Replacing English invalidates inherited auditions, never separate language
-approvals. Pronunciation practice shows a Latin-letter guide and a language example from
+Sharing English records a reference-level grant, not invented listening approvals
+for other languages. Replacing English invalidates that grant and affected
+auditions, never separate unchanged language approvals. Respect a user who
+chooses English for all languages; do not keep requesting more auditions. Pronunciation practice shows a Latin-letter guide and a language example from
 the selected model. OmniVoice can generate the independent example without a
 user reference; the separate own-voice guide uses that model with the saved
 recording. Neither action accepts an audition or changes the narrator. Missing

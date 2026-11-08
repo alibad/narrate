@@ -156,6 +156,40 @@ class HttpTests(unittest.TestCase):
   server.save_config({'accepted':accepted})
   self.assertEqual(self.request('/api/finish',{})[0],200)
   self.assertEqual(server.config()['accepted']['ar']['referenceSha256'],ar_hash)
+ def test_explicit_shared_english_finishes_twelve_languages_without_fabricated_acceptance(self):
+  codes=['en','ar','es','fr','de','it','pt','zh','ja','ko','hi','ru']
+  for code in ['en','ar']:
+   (server.VOICES/(code+'.wav')).write_bytes(('private-'+code).encode());(server.VOICES/(code+'.txt')).write_text('fixture-'+code)
+  accepted={code:{'id':'listened-'+code,'engine':'omnivoice','referenceSha256':server.sha(server.VOICES/(code+'.wav')),'acceptedAt':'before'}for code in ['en','ar']}
+  before={p.name:p.read_bytes()for p in server.VOICES.iterdir()}
+  server.save_config({'languages':codes,'references':{'ar':'ar'},'accepted':accepted,'setupReady':True,'setupModel':'omnivoice'})
+  status,data=self.request('/api/use-english-for-all',{});self.assertEqual(status,200)
+  self.assertEqual(data['config']['languages'],codes);self.assertEqual(data['config']['accepted'],accepted)
+  self.assertEqual(data['effectiveReferences'],{code:'en'for code in codes});self.assertTrue(data['config']['profileReady'])
+  grant=data['config']['sharedEnglishApproval'];self.assertEqual(grant['acceptedEnglishId'],accepted['en']['id']);self.assertEqual(grant['referenceSha256'],accepted['en']['referenceSha256'])
+  self.assertEqual(data['effectiveApprovals']['fr']['scope'],'english-reference')
+  self.assertEqual({p.name:p.read_bytes()for p in server.VOICES.iterdir()},before)
+  self.assertEqual(self.request('/api/finish',{})[0],200)
+  # An own-language override loses inherited English approval until it has its own real approval.
+  (server.VOICES/'fr.wav').write_bytes(b'new-french');(server.VOICES/'fr.txt').write_text('French fixture')
+  self.assertEqual(self.request('/api/reference-choice',{'language':'fr','reference':'fr'})[0],200)
+  self.assertEqual(self.request('/api/finish',{})[0],400)
+  self.assertEqual(server.config()['accepted'],accepted)
+ def test_shared_english_refuses_missing_stale_or_wrong_engine_approval_without_writing(self):
+  (server.VOICES/'en.wav').write_bytes(b'current');(server.VOICES/'en.txt').write_text('fixture')
+  for approval in [None,{'id':'old','engine':'omnivoice','referenceSha256':'stale'},{'id':'other','engine':'chatterbox','referenceSha256':server.sha(server.VOICES/'en.wav')}]:
+   server.save_config({'languages':['en','ar'],'setupReady':True,'setupModel':'omnivoice','accepted':{'en':approval}if approval else{}});before=server.CONFIG.read_bytes()
+   self.assertEqual(self.request('/api/use-english-for-all',{})[0],400);self.assertEqual(server.CONFIG.read_bytes(),before)
+ def test_replaced_english_or_changed_engine_stales_shared_grant(self):
+  (server.VOICES/'en.wav').write_bytes(b'original');(server.VOICES/'en.txt').write_text('fixture')
+  accepted={'en':{'id':'approved-en','engine':'omnivoice','referenceSha256':server.sha(server.VOICES/'en.wav')}}
+  server.save_config({'languages':['en','ar'],'setupReady':True,'setupModel':'omnivoice','accepted':accepted})
+  self.assertEqual(self.request('/api/use-english-for-all',{})[0],200)
+  original=server.config()['sharedEnglishApproval'];(server.VOICES/'en.wav').write_bytes(b'replaced')
+  self.assertEqual(self.request('/api/finish',{})[0],400)
+  self.assertEqual(server.config()['sharedEnglishApproval'],original);self.assertEqual(server.config()['accepted'],accepted)
+  (server.VOICES/'en.wav').write_bytes(b'original');server.save_config({'engine':'chatterbox'})
+  self.assertEqual(self.request('/api/finish',{})[0],400)
  def test_recording_replacement_preserves_previous_audio(self):
   from io import BytesIO
   def audio(freq):

@@ -6,7 +6,7 @@ from pathlib import Path
 from urllib.parse import urlparse,parse_qs,unquote
 from catalog import LANGUAGES,MODELS,RUNTIMES,recommend,validate_languages,model_path,installed,runtime,variant,hub,download_dirs
 from engines import prepare,speak
-from reference_policy import reference_code,effective_references
+from reference_policy import reference_code,effective_references,approval_for
 from pronunciation import capabilities as pronunciation_capabilities,synthesize as synthesize_pronunciation
 HERE=Path(__file__).parent
 DATA=Path(os.environ.get('NARRATE_VIDEO_DATA',os.environ.get('WALKTHROUGH_VIDEO_DATA',Path.home()/'.local/share/narrate-video')))
@@ -49,7 +49,7 @@ def state():
    if a.get('id')and a.get('language')in c['languages']and a.get('engine')==c['engine']:auditions[a['language']]=a
   except (OSError,ValueError):pass
  mine=references()
- return dict(version=2,config=c,languages=list(LANGUAGES.values()),mine=mine,effectiveReferences=effective_references(c,mine),pronunciation=pronunciation_capabilities(LANGUAGES,c,DATA),plan=plan,setup=job,auditions=auditions,engines={k:dict(label=v['label'],repo=v['repo'],langs=v['languages'],clone=True)for k,v in((k,variant(k))for k in MODELS)})
+ return dict(version=2,config=c,languages=list(LANGUAGES.values()),mine=mine,effectiveReferences=effective_references(c,mine),effectiveApprovals={code:approval_for(code,c,mine)for code in c['languages']},pronunciation=pronunciation_capabilities(LANGUAGES,c,DATA),plan=plan,setup=job,auditions=auditions,engines={k:dict(label=v['label'],repo=v['repo'],langs=v['languages'],clone=True)for k,v in((k,variant(k))for k in MODELS)})
 
 def set_job(**values):
  with LOCK:JOB.update(values);atomic_json(DATA/'setup-job.json',JOB)
@@ -131,9 +131,8 @@ def guide(req):
  GUIDE.mkdir(parents=True,exist_ok=True)
  with tempfile.TemporaryDirectory(prefix='guide-',dir=GUIDE)as td:
   with LOCK:
-   saved=[x.stem for x in VOICES.glob('*.wav')if x.stem in LANGUAGES]
-   code=lang if lang in saved else 'en' if 'en' in saved else(saved[0]if saved else None)
-   if not code:raise ValueError('Save one recording first; the guide speaks in your own voice.')
+   try:code=selected_reference(lang,{},c)
+   except ValueError:raise ValueError('Save one recording first; the guide speaks in your own voice.')
    ref=Path(td)/'reference.wav';shutil.copyfile(VOICES/f'{code}.wav',ref);reftext=(VOICES/f'{code}.txt').read_text(encoding='utf-8')
   out=GUIDE/f'{uuid.uuid4().hex}-{lang}.wav';result=speak(name,lang,text,str(out),str(ref),reftext,DATA)
  return dict(url=f'/guide/{out.name}',seconds=result['seconds'],from_recording=code,language=lang)
@@ -190,6 +189,15 @@ class Handler(BaseHTTPRequestHandler):
     save_config(dict(languages=codes,preference=pref,profileReady=c.get('profileReady',False)if same else False));return self.json(state())
    if url.path=='/api/recommend':return self.json(recommend(req.get('languages'),DATA,req.get('preference','reuse'),config()['engine']))
    if url.path=='/api/setup':return self.json(start_setup(req))
+   if url.path=='/api/use-english-for-all':
+    with LOCK:
+     c=config();name=c['engine'];available=references();english=c.get('accepted',{}).get('en',{});saved=available.get('en',{})
+     if not c.get('setupReady')or c.get('setupModel')!=name or name not in MODELS or any(code not in variant(name)['languages']for code in c['languages']):raise ValueError('Complete setup for a model covering every selected language first.')
+     if not saved.get('sha256')or not(VOICES/'en.txt').is_file()or english.get('engine')!=name or english.get('referenceSha256')!=saved['sha256']or not english.get('id'):raise ValueError('An accepted current English recording is required before sharing it.')
+     refs=dict(c.get('references',{}));refs.update({code:'en'for code in c['languages']})
+     grant=dict(mode='english-reference',engine=name,referenceSha256=saved['sha256'],acceptedEnglishId=english['id'],authorisedAt=now())
+     save_config(dict(references=refs,sharedEnglishApproval=grant,profileReady=True))
+    return self.json(state())
    if url.path=='/api/reference-choice':
     lang=req.get('language');ref=req.get('reference')
     if lang not in config()['languages']or ref not in references():raise ValueError('Choose an existing saved recording.')
@@ -208,10 +216,9 @@ class Handler(BaseHTTPRequestHandler):
     if r['engine']!=c['engine']or r['referenceSha256']!=sha(VOICES/f'{ref}.wav'):raise ValueError('The model or recording changed. Generate a fresh audition.')
     accepted=c.get('accepted',{});accepted[lang]=dict(id=token,engine=r['engine'],referenceSha256=r['referenceSha256'],acceptedAt=now());save_config(dict(accepted=accepted));return self.json(state())
    if url.path=='/api/finish':
-    c=config()
+    c=config();available=references()
     for lang in c['languages']:
-     a=c.get('accepted',{}).get(lang);ref=selected_reference(lang,{},c)
-     if not a or a['engine']!=c['engine']or a['referenceSha256']!=sha(VOICES/f'{ref}.wav'):raise ValueError('Listen to and accept an audition in every selected language first.')
+     if not approval_for(lang,c,available):raise ValueError('Accept this language audition, or explicitly share your accepted English recording first.')
     save_config(dict(profileReady=True));return self.json(state())
    return self.send(404,b'not found','text/plain')
   except Exception as e:return self.json({'error':str(e).replace(str(DATA),'private storage')[:500]},400)

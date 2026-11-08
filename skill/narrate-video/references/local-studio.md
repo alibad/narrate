@@ -59,7 +59,7 @@ setup only loads it. No model weights are bundled.
    English recording is automatically selected for other languages that have no
    explicit choice or their own saved recording. Existing own-language references
    and explicit saved choices are preserved. Cross-language references can carry
-   accents; the user still auditions each target language. To replace one
+   accents; the user may audition each target language or explicitly share an already-accepted English voice. To replace one
    language, record it or preview a saved reference, then choose **Use this one**.
    Stopping a recording or browsing the selector never commits a replacement.
    Aim for 5–10 seconds; the accepted range is 3–35 seconds. Existing longer
@@ -68,7 +68,7 @@ setup only loads it. No model weights are bundled.
    English stales auditions that used the prior English audio, while an unchanged
    language-specific reference retains its approval. Selecting the already-active
    recording is a no-op for readiness. No audition is accepted automatically.
-5. Generate, listen to and accept an audition in every selected language. Click
+5. Generate, listen to and accept individual language auditions, or choose **Use my English voice for all languages** after accepting English. This keeps the languages and saved recordings, uses English for all selected references, and records a shared-reference grant without marking unplayed auditions as listened to. Click
    **Save my voice profile**. The user's listening approval determines quality;
    recommendation scores do not measure audio quality.
 
@@ -135,3 +135,14 @@ busy/take guards prevent a delayed example from starting during a take.
 Example caches bind exact text, engine, model revision, voice and language.
 Use the selected model's actual response metadata as evidence; a decoded file or
 ASR match does not prove natural pronunciation. Give the user the real sample.
+
+
+An explicit `POST /api/use-english-for-all` with `{}` can apply the user's stated
+choice to share the current accepted English voice. It requires the real English
+approval's current model/reference hash and preserves the accepted-audition rows.
+The grant is `config.sharedEnglishApproval`, bound to the accepted English id,
+engine and reference SHA. Profile readiness and the speech client accept this
+scope for languages actually using English. A replacement English recording or
+model change invalidates it; a new language-specific override needs its own real
+approval. A shared grant is not a claim that the target-language auditions were
+listened to or their pronunciation was approved.
