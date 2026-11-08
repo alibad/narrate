@@ -43,10 +43,12 @@ preset. The first committed English recording supplies other languages unless
 an explicit or language-specific recording exists. New takes and reference
 choices remain previews until **Use this one**; only that language changes.
 Replacing English invalidates inherited auditions, never separate language
-approvals. Pronunciation practice shows a Latin-letter guide and, when a
-matching installed system voice exists, a clearly labelled synthetic language
-example. It is separate from the user's voice and never accepts an audition.
-Do not call a clone or a generic Arabic voice a native dialect recording.
+approvals. Pronunciation practice shows a Latin-letter guide and a language example from
+the selected model. OmniVoice can generate the independent example without a
+user reference; the separate own-voice guide uses that model with the saved
+recording. Neither action accepts an audition or changes the narrator. Missing
+independent adapters fail explicitly; never substitute OS speech or another
+model. Synthetic examples still need listening review for pronunciation quality.
 While recording or listening approval is pending, prepare scripts and
 captures, but do not finish with a substitute voice.
 

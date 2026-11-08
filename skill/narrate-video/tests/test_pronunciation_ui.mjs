@@ -14,7 +14,7 @@ const state={
  config:{engine:'omnivoice',languages:['en','ar'],preference:'reuse',setupReady:true,setupModel:'omnivoice',references:{},accepted:{en:{id:'accepted-en',engine:'omnivoice',referenceSha256:reference.sha256}},profileReady:false},
  effectiveReferences:{en:'en',ar:'en'},mine:{en:reference},
  languages:[{code:'en',name:'English',native:'English',prompt:'Full English passage.',sample:'English audition.',pronunciation:{latin:'FULL ING-glish PASS-ij.',note:'Approximate fixture.'},samplePronunciation:{latin:'ING-glish aw-DISH-un.',note:'Approximate sample.'}},{code:'ar',name:'Arabic',native:'العربية',rtl:true,prompt:'نص كامل.',sample:'اختبار.',pronunciation:{latin:'Naṣṣ kāmil.',note:'Approximate fixture.'},samplePronunciation:{latin:'Ikhtibār.',note:'Approximate sample.'}}],
- pronunciation:{en:{available:true,voice:'Fixture English',locale:'en-US'},ar:{available:true,voice:'Fixture Arabic',locale:'ar-SA'}},
+ pronunciation:{en:{available:true,voice:'Fixture English',locale:'en-US',engine:'omnivoice',model:'fixture-model',revision:'fixture-r1'},ar:{available:true,voice:'Fixture Arabic',locale:'ar-SA',engine:'omnivoice',model:'fixture-model',revision:'fixture-r1'}},
  plan:{models:[{id:'omnivoice',label:'Synthetic model',languages:['en','ar'],installed:true,downloadBytes:0}]},setup:{state:'idle'},auditions:{}
 };
 let nextNative=null;
@@ -32,7 +32,7 @@ const context=vm.createContext({
   if(path==='/api/status')return{ok:true,json:async()=>structuredClone(state)};
   if(path==='/api/pronunciation'){
    const request=JSON.parse(opts.body);
-   const value=nextNative?await nextNative:{url:'/out/synthetic-pronunciation.wav',voice:state.pronunciation[request.lang].voice,locale:state.pronunciation[request.lang].locale,kind:'pronunciation-example'};
+   const value=nextNative?await nextNative:{url:'/out/synthetic-pronunciation.wav',...state.pronunciation[request.lang],kind:'pronunciation-example'};
    return{ok:true,json:async()=>structuredClone(value)};
   }
   throw Error(`Unexpected synthetic request: ${path}`);
@@ -62,7 +62,7 @@ assert(!recordPart.outerHTML.includes('Naṣṣ kāmil.'));
 assert(recordPart.outerHTML.includes('no matching Latin-letter guide'));
 assert.equal(nativeCalls().length,0);
 await handle('native-example',{context:'record'});
-assert.deepEqual(JSON.parse(nativeCalls().at(-1).opts.body),{lang:'ar',text:'كلمات جديدة.'});
+assert.deepEqual(JSON.parse(nativeCalls().at(-1).opts.body),{lang:'ar',text:'كلمات جديدة.',engine:'omnivoice'});
 assert.equal(nativeCalls().at(-1).opts.method,'POST');
 assert.equal(events.filter(e=>e==='native-play').length,1);
 assert.equal(run('nativeExamples.ar.text'),'كلمات جديدة.');
@@ -77,6 +77,13 @@ await handle('native-example',{context:'record'});
 assert.equal(nativeCalls().length,2);
 assert.equal(run('nativeExamples.ar.voice'),'Replacement Arabic');
 
+// Revision changes also invalidate cached audio from the same named engine.
+state.pronunciation.ar.revision='fixture-r2';
+run('S.pronunciation.ar.revision="fixture-r2";render()');
+assert(!main().includes('Replay language example'));
+await handle('native-example',{context:'record'});
+assert.equal(nativeCalls().length,3);assert.equal(run('nativeExamples.ar.revision'),'fixture-r2');
+
 // The audition context requests its own exact passage, not the recording
 // prompt, cached guide or any Latin-letter helper.
 run('recordMode=false;go(5);auditionLang="en";render()');
@@ -85,7 +92,7 @@ const auditionPart=node();elements.set('.pronunciation[data-pronunciation-contex
 listeners.input({target:{id:'audition-script',value:'A different exact audition.'}});
 assert(!auditionPart.outerHTML.includes('ING-glish aw-DISH-un.'));
 await handle('native-example',{context:'audition'});
-assert.deepEqual(JSON.parse(nativeCalls().at(-1).opts.body),{lang:'en',text:'A different exact audition.'});
+assert.deepEqual(JSON.parse(nativeCalls().at(-1).opts.body),{lang:'en',text:'A different exact audition.',engine:'omnivoice'});
 assert.equal(run('JSON.stringify({config:S.config,mine:S.mine,effective:S.effectiveReferences})'),profileBefore);
 assert.deepEqual(Object.keys(run('auditions')),[]);
 

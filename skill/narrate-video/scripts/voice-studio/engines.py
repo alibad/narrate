@@ -75,3 +75,30 @@ def _speak(name,lang,text,out,ref_audio,ref_text,data):
    audio_write(out,audio,rate)
   v=variant(name)
   return dict(engine=name,label=v['label'],model=v['repo'],revision=v['revision'],seconds=round(len(audio)/rate,2),took=round(time.time()-start,2),cloned=True,provider='local',fallback=False,language=lang)
+
+
+def speak_example(name,lang,text,out,data):
+ """Independent speech in the selected model, never a user voice reference."""
+ return _worker.submit(_speak_example,name,lang,text,out,data).result()
+
+def _speak_example(name,lang,text,out,data):
+ if name!='omnivoice' or runtime()!='mlx':
+  raise ValueError('The selected model has no independent pronunciation adapter. No other engine is substituted.')
+ if lang not in LANGUAGES or lang not in variant(name)['languages']:
+  raise ValueError('The selected model does not support this language.')
+ if not isinstance(text,str)or not 1<=len(text.strip())<=600:
+  raise ValueError('Keep the passage between 1 and 600 characters.')
+ import numpy as np
+ with _lock:
+  model=_load(name,data);start=time.time();parts=[];rate=None
+  for part in model.generate(text=text.strip(),language=LANGUAGES[lang]['omni_id'],
+                             ref_audio=None,ref_text=None,verbose=False):
+   parts.append(np.asarray(part.audio).reshape(-1));rate=part.sample_rate
+  if not parts:raise RuntimeError('The selected model returned no pronunciation audio.')
+  audio=np.concatenate(parts)
+  if not np.isfinite(audio).all()or np.max(np.abs(audio))<.001:
+   raise RuntimeError('The selected model returned invalid or silent pronunciation audio.')
+  _write_wav(out,audio,rate);v=variant(name)
+  return dict(engine=name,label=v['label'],model=v['repo'],revision=v['revision'],
+              seconds=round(len(audio)/rate,2),took=round(time.time()-start,2),
+              cloned=False,provider='local',fallback=False,language=lang)

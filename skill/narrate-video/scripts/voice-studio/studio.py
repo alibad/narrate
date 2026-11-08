@@ -49,7 +49,7 @@ def state():
    if a.get('id')and a.get('language')in c['languages']and a.get('engine')==c['engine']:auditions[a['language']]=a
   except (OSError,ValueError):pass
  mine=references()
- return dict(version=2,config=c,languages=list(LANGUAGES.values()),mine=mine,effectiveReferences=effective_references(c,mine),pronunciation=pronunciation_capabilities(LANGUAGES,c['languages']),plan=plan,setup=job,auditions=auditions,engines={k:dict(label=v['label'],repo=v['repo'],langs=v['languages'],clone=True)for k,v in((k,variant(k))for k in MODELS)})
+ return dict(version=2,config=c,languages=list(LANGUAGES.values()),mine=mine,effectiveReferences=effective_references(c,mine),pronunciation=pronunciation_capabilities(LANGUAGES,c,DATA),plan=plan,setup=job,auditions=auditions,engines={k:dict(label=v['label'],repo=v['repo'],langs=v['languages'],clone=True)for k,v in((k,variant(k))for k in MODELS)})
 
 def set_job(**values):
  with LOCK:JOB.update(values);atomic_json(DATA/'setup-job.json',JOB)
@@ -119,8 +119,8 @@ def generate(req):
   return result
 
 def pronunciation(req):
- """An installed system-language example, separate from the user's voice and auditions."""
- return synthesize_pronunciation(req,LANGUAGES,config()['languages'],DATA/'out/pronunciation')
+ """The selected model speaks without a user reference; never an audition."""
+ return synthesize_pronunciation(req,LANGUAGES,config(),DATA,DATA/'out/pronunciation')
 
 def guide(req):
  """Speak a passage the user cannot read, in their own saved voice, to read along with. Never an audition."""

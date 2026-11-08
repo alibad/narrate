@@ -115,27 +115,23 @@ Keep private data, weights and generated personal audio outside public packages.
 
 ## Pronunciation rehearsal
 
-Step 4 keeps the original-script passage beside a complete Latin-letter guide.
-The guide is approximate: it helps rehearse sounds, and does not grade an accent
-or guarantee native pronunciation. Edited passages lose the old Latin guide
-rather than showing transliteration for different words. Step 5 also shows the
-matching guide for built-in audition text.
+Step 4 shows the original-script passage and its approximate Latin-letter guide.
+Editing a passage hides its old guide; built-in audition passages have matching
+guides too. These are rehearsal aids, not accent grading or native approval.
 
-**Hear language example** uses a matching installed macOS system voice, labelled
-with its voice and locale. This is a synthetic language example, separate from
-the user's cloned narration, and it never changes a reference or accepts an
-audition. It is generated locally to private storage and played only after the
-user asks. Examples pause before recording; no example can start during a take.
-Missing voices and dialect mismatches are shown as unavailable, with no cloud,
-download, or Standard Arabic substitute for a Gulf/Egyptian example. Other
-platforms retain the text guide; native audio is unavailable until a supported
-local pronunciation adapter is configured. **Hear it in my voice** remains a
-separate cloned read-along guide and is not a native-speaker example.
+**Hear language example** uses the model selected in Step 2. The OmniVoice MLX
+adapter generates an independent language example without ref_audio or ref_text;
+it does not read the user's recordings. The UI identifies the engine and language.
+The endpoint checks the selected model, setup, installed weights and language
+before inference. No OS speech, cloud service, other model or preset substitutes
+for an unavailable adapter. Other selected models currently show independent
+examples as unavailable; their explicit own-voice guide still uses that model.
 
+**Hear it in my voice** separately uses the selected cloning model with the
+user's saved reference. Neither practice action accepts an audition, changes
+references, or replaces the narration voice. Playback stops before a recording;
+busy/take guards prevent a delayed example from starting during a take.
 
-System examples use the named preferred voice in the exact locale, including
-macOS names decorated with a language/region suffix. They never silently pick
-an alphabetically first voice such as Eddy when that preferred voice is absent.
-Basic system speech can sound robotic and is not a native-speaker recording or
-pronunciation approval. Generating/decoding audio is not evidence of natural
-speech quality. Compare an actual sample before using it as a rehearsal model.
+Example caches bind exact text, engine, model revision, voice and language.
+Use the selected model's actual response metadata as evidence; a decoded file or
+ASR match does not prove natural pronunciation. Give the user the real sample.
