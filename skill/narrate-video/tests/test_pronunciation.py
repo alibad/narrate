@@ -69,6 +69,18 @@ class PronunciationTests(unittest.TestCase):
         self.assertEqual(pronunciation.capability({'speechLocale': 'en_GB'}, voices)['voice'], 'Daniel')
         self.assertEqual(pronunciation.capability({'speechLocale': 'en_GB'}, list(reversed(voices)))['voice'], 'Daniel')
 
+    def test_decorated_preferred_names_win_over_alphabetical_eloquence_fallback(self):
+        voices = [{'voice': 'Eddy (French (France))', 'locale': 'fr-FR'},
+                  {'voice': 'Thomas (French (France))', 'locale': 'fr-FR'}]
+        for rows in [voices, list(reversed(voices))]:
+            choice = pronunciation.capability({'speechLocale': 'fr-FR'}, rows)
+            self.assertEqual(choice['voice'], 'Thomas (French (France))')
+            self.assertEqual(choice['quality'], 'basic-system')
+        choice = pronunciation.capability({'speechLocale': 'fr-FR'}, voices[:1])
+        self.assertFalse(choice['available'])
+        self.assertIn('not substituted', choice['reason'])
+        self.assertFalse(pronunciation.capability({'speechLocale': 'fr-CA'}, voices)['available'])
+
     def test_invalid_or_unselected_passage_refuses_before_output_or_process(self):
         for request in [None, [], {'lang': 'fr', 'text': 'hello'}, {'lang': ['en'], 'text': 'hello'}, {'lang': 'en', 'text': []}, {'lang': 'en', 'text': ''}, {'lang': 'en', 'text': 'x'*601}, {'lang': 'en', 'text': 'x\0y'}]:
             with patch.object(pronunciation.subprocess, 'run') as run:

@@ -131,3 +131,11 @@ download, or Standard Arabic substitute for a Gulf/Egyptian example. Other
 platforms retain the text guide; native audio is unavailable until a supported
 local pronunciation adapter is configured. **Hear it in my voice** remains a
 separate cloned read-along guide and is not a native-speaker example.
+
+
+System examples use the named preferred voice in the exact locale, including
+macOS names decorated with a language/region suffix. They never silently pick
+an alphabetically first voice such as Eddy when that preferred voice is absent.
+Basic system speech can sound robotic and is not a native-speaker recording or
+pronunciation approval. Generating/decoding audio is not evidence of natural
+speech quality. Compare an actual sample before using it as a rehearsal model.

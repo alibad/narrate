@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 import threading
 import uuid
+import unicodedata
 import wave
 from pathlib import Path
 
@@ -74,8 +75,16 @@ def capability(language, voices=None):
     if not matches:
         return {**base, 'reason': 'A matching installed macOS system voice is unavailable. No other accent or language is substituted.'}
     preferred = PREFERRED.get(requested)
-    selected = sorted(matches, key=lambda v: (v['voice'] != preferred, v['voice'].casefold()))[0]
-    return {**base, **selected, 'available': True, 'reason': None}
+    def identity(name):
+        # macOS may decorate the same installed name with language/region labels.
+        return unicodedata.normalize('NFC', name.split(' (', 1)[0]).casefold()
+    choices = [voice for voice in matches if preferred and identity(voice['voice']) == identity(preferred)]
+    if not choices:
+        return {**base, 'reason': 'The preferred pronunciation voice is not installed. A basic or novelty voice is not substituted.'}
+    selected = sorted(choices, key=lambda v: v['voice'].casefold())[0]
+    return {**base, **selected, 'available': True, 'reason': None,
+            'quality': 'basic-system',
+            'qualityNote': 'Basic system speech, not a native-speaker recording or a pronunciation-quality approval.'}
 
 
 def capabilities(languages, selected):
@@ -123,7 +132,7 @@ def synthesize(request, languages, selected, destination):
             target.chmod(0o600)
         return {'url': f'/pronunciation/{filename}', 'seconds': round(seconds, 2),
                 'language': code, 'provider': 'macos-system', 'voice': choice['voice'],
-                'locale': choice['locale'], 'cloned': False, 'synthetic': True, 'audition': False}
+                'locale': choice['locale'], 'quality': choice['quality'], 'cloned': False, 'synthetic': True, 'audition': False}
     except (OSError, subprocess.SubprocessError, wave.Error) as error:
         raise ValueError('The installed system voice could not prepare this example. No fallback or voice-profile change was made.') from error
     finally:

@@ -32,7 +32,7 @@ const context=vm.createContext({
   if(path==='/api/status')return{ok:true,json:async()=>structuredClone(state)};
   if(path==='/api/pronunciation'){
    const request=JSON.parse(opts.body);
-   const value=nextNative?await nextNative:{url:'/out/synthetic-pronunciation.wav',voice:'Fixture voice',locale:request.lang==='ar'?'ar-SA':'en-US',kind:'pronunciation-example'};
+   const value=nextNative?await nextNative:{url:'/out/synthetic-pronunciation.wav',voice:state.pronunciation[request.lang].voice,locale:state.pronunciation[request.lang].locale,kind:'pronunciation-example'};
    return{ok:true,json:async()=>structuredClone(value)};
   }
   throw Error(`Unexpected synthetic request: ${path}`);
@@ -68,6 +68,14 @@ assert.equal(events.filter(e=>e==='native-play').length,1);
 assert.equal(run('nativeExamples.ar.text'),'كلمات جديدة.');
 await handle('native-example',{context:'record'});
 assert.equal(nativeCalls().length,1);assert.equal(events.filter(e=>e==='native-play').length,2);
+
+// A cached clip from the old voice cannot be replayed after a capability change.
+state.pronunciation.ar.voice='Replacement Arabic';
+run('S.pronunciation.ar.voice="Replacement Arabic";render()');
+assert(!main().includes('Replay language example'));
+await handle('native-example',{context:'record'});
+assert.equal(nativeCalls().length,2);
+assert.equal(run('nativeExamples.ar.voice'),'Replacement Arabic');
 
 // The audition context requests its own exact passage, not the recording
 // prompt, cached guide or any Latin-letter helper.
