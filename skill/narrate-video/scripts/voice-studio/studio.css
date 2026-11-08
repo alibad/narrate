@@ -17,3 +17,12 @@
 /* Rehearsal belongs beside the passage, separate from the saved voice. */
 .practice-card{margin-top:24px;padding:24px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
 .practice-passage{font-size:18px;line-height:1.9;overflow-wrap:anywhere}.pronunciation{margin:18px 0;padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--paper);min-width:0}.pronunciation h3{font-size:16px}.pronunciation .field-label{margin:14px 0 6px}.latin-guide{font-size:17px;line-height:1.9;overflow-wrap:anywhere;unicode-bidi:isolate;margin:0 0 8px}.pronunciation .quiet{font-size:12px;line-height:1.7}.pronunciation audio{display:block;width:100%;margin-top:12px}.pronunciation .btn{min-height:44px;white-space:normal;text-align:left}@media(max-width:730px){.practice-card{padding:19px}.pronunciation{padding:14px}.latin-guide{font-size:16px}}
+
+/* Pickers and rehearsal inherit the host theme, including light overlays. */
+.dd-trigger,.dd-menu{background:var(--surface);color:var(--ink);border-color:var(--line);font-size:14px}
+.dd-trigger{min-height:48px}.dd-trigger:hover,.dd-trigger[aria-expanded=true]{border-color:var(--coral)}
+.dd-trigger[aria-expanded=true]{box-shadow:0 0 0 3px var(--tint)}
+.dd-value.placeholder,.guide-hint{color:var(--sub)}
+.dd-option{color:var(--ink);font-size:14px;min-height:44px}
+.dd-option:hover,.dd-option:focus-visible{background:var(--tint)}.dd-check{stroke:var(--coral)}
+.guide .quiet,.guide-hint,.pronunciation .quiet{color:var(--sub);font-size:14px;line-height:1.75}
