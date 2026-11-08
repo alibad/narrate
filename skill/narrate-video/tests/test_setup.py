@@ -64,9 +64,55 @@ class HttpTests(unittest.TestCase):
  def test_invalid_setup_cannot_start_download(self):
   status,_=self.request('/api/setup',{'languages':['ar'],'model':'qwen3-base'});self.assertEqual(status,400);self.assertFalse((self.root/'models').exists())
  def test_finish_requires_accepted_auditions(self):self.assertEqual(self.request('/api/finish',{})[0],400)
- def test_missing_same_language_reference_never_falls_back(self):
-  (server.VOICES/'en.wav').write_bytes(b'fixture');server.save_config({'languages':['ar'],'setupReady':True,'setupModel':'omnivoice'})
-  status,data=self.request('/api/generate',{'engine':'omnivoice','lang':'ar','text':'test'});self.assertEqual(status,400);self.assertIn('explicitly choose',data['error'])
+ def test_committed_english_is_an_automatic_nonwriting_default(self):
+  (server.VOICES/'en.wav').write_bytes(b'fixture');server.save_config({'languages':['en','ar','es']})
+  before=server.CONFIG.read_bytes();status,data=self.request('/api/status')
+  self.assertEqual(status,200);self.assertEqual(data['effectiveReferences'],{'en':'en','ar':'en','es':'en'})
+  self.assertEqual(server.CONFIG.read_bytes(),before);self.assertEqual(data['config']['references'],{})
+  self.assertEqual(server.selected_reference('ar',{},server.config()),'en')
+ def test_no_arbitrary_nonenglish_fallback_or_preset(self):
+  (server.VOICES/'fr.wav').write_bytes(b'fixture');server.save_config({'languages':['ar'],'setupReady':True,'setupModel':'omnivoice'})
+  status,data=self.request('/api/generate',{'engine':'omnivoice','lang':'ar','text':'test'})
+  self.assertEqual(status,400);self.assertIn('Record English once',data['error'])
+ def test_explicit_reference_overrides_default_and_missing_choice_refuses(self):
+  for code in ['en','fr','ar']:(server.VOICES/(code+'.wav')).write_bytes(code.encode())
+  server.save_config({'languages':['en','ar'],'references':{'ar':'fr'}})
+  self.assertEqual(server.selected_reference('ar',{},server.config()),'fr')
+  self.assertEqual(server.selected_reference('ar',{'reference':'en'},server.config()),'en')
+  server.save_config({'references':{'ar':'de'}})
+  with self.assertRaises(ValueError):server.selected_reference('ar',{},server.config())
+ def test_own_legacy_recording_is_preserved_instead_of_english_default(self):
+  for code in ['en','ar']:(server.VOICES/(code+'.wav')).write_bytes(code.encode())
+  self.assertEqual(server.selected_reference('ar',{},server.config()),'ar')
+ def test_reselecting_effective_reference_keeps_approved_profile(self):
+  (server.VOICES/'en.wav').write_bytes(b'fixture')
+  approved={'ar':{'id':'already-listened','engine':'omnivoice','referenceSha256':'fixture'}}
+  server.save_config({'languages':['en','ar'],'accepted':approved,'profileReady':True})
+  status,data=self.request('/api/reference-choice',{'language':'ar','reference':'en'})
+  self.assertEqual(status,200);self.assertTrue(data['config']['profileReady']);self.assertEqual(data['config']['accepted'],approved)
+ def test_explicit_override_changes_only_target_without_accepting_auditions(self):
+  for code in ['en','ar']:(server.VOICES/(code+'.wav')).write_bytes(code.encode())
+  approved={'en':{'id':'already-listened','engine':'omnivoice'}}
+  server.save_config({'languages':['en','ar','es'],'references':{'ar':'en'},'accepted':approved,'profileReady':True})
+  status,data=self.request('/api/reference-choice',{'language':'ar','reference':'ar'})
+  self.assertEqual(status,200);self.assertEqual(data['effectiveReferences'],{'en':'en','ar':'ar','es':'en'})
+  self.assertEqual(data['config']['accepted'],approved);self.assertFalse(data['config']['profileReady'])
+  self.assertEqual(data['config']['languages'],['en','ar','es']);self.assertEqual(data['config']['engine'],'omnivoice')
+ def test_replaced_english_stales_followers_but_preserves_own_override(self):
+  for code in ['en','ar']:(server.VOICES/(code+'.wav')).write_bytes(('before-'+code).encode())
+  en_hash=server.sha(server.VOICES/'en.wav');ar_hash=server.sha(server.VOICES/'ar.wav')
+  accepted={code:{'id':code+'-listened','engine':'omnivoice','referenceSha256':ar_hash if code=='ar' else en_hash} for code in ['en','ar','es']}
+  server.save_config({'languages':['en','ar','es'],'references':{'ar':'ar'},'accepted':accepted,'profileReady':True})
+  (server.VOICES/'en.wav').write_bytes(b'after-English');server.save_config({'profileReady':False})
+  status,data=self.request('/api/finish',{});self.assertEqual(status,400)
+  self.assertEqual(server.config()['accepted'],accepted)
+  self.assertEqual(server.sha(server.VOICES/'ar.wav'),ar_hash)
+  self.assertEqual(server.selected_reference('ar',{},server.config()),'ar')
+  current=server.sha(server.VOICES/'en.wav')
+  for code in ['en','es']:accepted[code]={**accepted[code],'id':'newly-listened-'+code,'referenceSha256':current}
+  server.save_config({'accepted':accepted})
+  self.assertEqual(self.request('/api/finish',{})[0],200)
+  self.assertEqual(server.config()['accepted']['ar']['referenceSha256'],ar_hash)
  def test_recording_replacement_preserves_previous_audio(self):
   from io import BytesIO
   def audio(freq):
@@ -74,10 +120,17 @@ class HttpTests(unittest.TestCase):
    with wave.open(buf,'wb')as w:
     w.setnchannels(1);w.setsampwidth(2);w.setframerate(24000);w.writeframes(b''.join(struct.pack('<h',int(5000*math.sin(2*math.pi*freq*i/24000)))for i in range(24000*4)))
    return buf.getvalue()
-  def upload(freq):
-   req=urllib.request.Request(self.url+'/api/reference?lang=en&text=Synthetic%20test%20fixture',data=audio(freq),headers={'Content-Type':'audio/wav'})
+  def upload(freq,lang='en'):
+   req=urllib.request.Request(self.url+f'/api/reference?lang={lang}&text=Synthetic%20test%20fixture',data=audio(freq),headers={'Content-Type':'audio/wav'})
    with urllib.request.urlopen(req)as r:return json.load(r)
-  upload(300);old=server.sha(server.VOICES/'en.wav');upload(450);self.assertNotEqual(server.sha(server.VOICES/'en.wav'),old)
+  server.save_config({'languages':['en','ar','es'],'accepted':{'es':{'id':'existing-approval'}}})
+  upload(300);self.assertEqual(server.selected_reference('ar',{},server.config()),'en');old=server.sha(server.VOICES/'en.wav');upload(450);self.assertNotEqual(server.sha(server.VOICES/'en.wav'),old)
   history=list((self.root/'voice-history').rglob('en.wav'));self.assertEqual(len(history),1);self.assertEqual(server.sha(history[0]),old)
+  self.assertEqual(server.selected_reference('ar',{},server.config()),'en')
+  self.assertEqual(server.config()['accepted'],{'es':{'id':'existing-approval'}})
+  upload(600,'ar');self.assertEqual(server.selected_reference('ar',{},server.config()),'ar')
+  self.assertEqual(server.selected_reference('es',{},server.config()),'en')
+  self.assertEqual(server.config()['references'],{'en':'en','ar':'ar'})
+  self.assertEqual(server.config()['languages'],['en','ar','es'])
 
 if __name__=='__main__':unittest.main()

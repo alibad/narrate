@@ -32,12 +32,19 @@ language. Recommendations filter documented coverage and cloning capability,
 then honor the user's installed-model or download-size preference. Explain the
 reason and permit eligible overrides. Use the resulting accepted voice profile.
 Do not replace this workflow with a static audition page or another preset.
-Reuse saved recordings where appropriate. While recording or listening approval
+The first committed English recording automatically supplies the reference for
+other languages without an explicit choice or their own saved recording.
+Existing language-specific and explicitly chosen references remain in place.
+New takes and saved-reference previews do not replace anything until the user
+chooses **Use this one**, which changes only that language. Replacing English
+updates languages still using English; their prior auditions become stale,
+while unaffected language-specific approvals remain valid. This does not
+automatically accept any audition. While recording or listening approval
 is pending, prepare scripts and captures; do not finish with a substitute voice.
 
 Read [speech and auditions](references/speech.md) when generating or comparing
 voices. Use supplied speech or a different adapter when the user explicitly chooses it.
-No provider, endpoint, credentials, model download or fallback is implicit.
+No provider, endpoint, credentials, model download or preset substitution is implicit.
 State the actual provider, model/revision, preset or authorized voice reference,
 language and delivery settings. Never describe a preset as the user's voice.
 

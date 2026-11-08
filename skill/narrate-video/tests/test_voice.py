@@ -7,10 +7,13 @@ import sys
 import tempfile
 import unittest
 import wave
+import io
+from unittest.mock import patch
 from pathlib import Path
 
 SCRIPTS=Path(__file__).resolve().parents[1]/'scripts'
 sys.path.insert(0,str(SCRIPTS))
+import studio_speech
 from voice import synthesize,compose
 from qa import compare
 from studio import build
@@ -62,6 +65,22 @@ class VoiceTests(unittest.TestCase):
         for a,b in [('Do not send it.','Do send it.'),('Send two files.','Send three files.'),('Click save then close.','Click close then save.'),('Go go now.','Go now.')]:
             self.assertFalse(compare(a,b)['exactOrderedMatch'])
         self.assertTrue(compare('Save the file.','save the file!')['exactOrderedMatch'])
+
+    def test_studio_client_uses_server_resolved_english_reference(self):
+        reference_hash='f'*64
+        status={'config':{'engine':'omnivoice','voice':'mine','profileReady':True,'languages':['en','ar'],'references':{},'accepted':{'ar':{'engine':'omnivoice','referenceSha256':reference_hash}}},'engines':{'omnivoice':{'langs':['en','ar']}},'mine':{'en':{'sha256':reference_hash}},'effectiveReferences':{'en':'en','ar':'en'},'plan':{'models':[{'id':'omnivoice','repo':'synthetic-test/voice','revision':'test'}]}}
+        posts=[]
+        def response(request,timeout):
+            if isinstance(request,str):return io.BytesIO(json.dumps(status).encode())
+            posts.append(json.loads(request.data));audio=io.BytesIO(b'synthetic-provider-response')
+            audio.headers={'X-Voice':'omnivoice; cloned=True; lang=ar','X-Voice-Reference-SHA256':reference_hash,'X-Voice-Reference-Language':'en'}
+            return audio
+        def convert(args):Path(args[-1]).write_bytes((self.root/'0.wav').read_bytes())
+        with patch.object(studio_speech.urllib.request,'urlopen',response),patch.object(studio_speech,'command',convert):
+            receipt=studio_speech.generate(self.text,self.root/'accepted-ar.wav','ar')
+        self.assertEqual(receipt['referenceLanguage'],'en');self.assertEqual(receipt['referenceSha256'],reference_hash)
+        self.assertEqual(posts,[{'input':'Exact test phrase.','language':'ar','engine':'omnivoice','mine':True}])
+        self.assertEqual((self.root/'accepted-ar.wav').read_bytes(),(self.root/'0.wav').read_bytes())
 
     def test_audition_escapes_content_and_keeps_audio(self):
         spec=self.root/'audition.json';spec.write_text(json.dumps({'takes':[dict(name='<unsafe>',provider='test',model='tone',revision='1',language='en',text='Synthetic tone, not speech.',audio='0.wav')]}))

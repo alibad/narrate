@@ -6,6 +6,7 @@ from pathlib import Path
 from urllib.parse import urlparse,parse_qs,unquote
 from catalog import LANGUAGES,MODELS,recommend,validate_languages,model_path,installed
 from engines import prepare,speak
+from reference_policy import reference_code,effective_references
 HERE=Path(__file__).parent
 DATA=Path(os.environ.get('NARRATE_VIDEO_DATA',os.environ.get('WALKTHROUGH_VIDEO_DATA',Path.home()/'.local/share/narrate-video')))
 os.environ.setdefault('HF_HUB_CACHE',str(DATA/'model-hub'))
@@ -46,7 +47,8 @@ def state():
    a=json.loads(path.read_text())
    if a.get('id')and a.get('language')in c['languages']and a.get('engine')==c['engine']:auditions[a['language']]=a
   except (OSError,ValueError):pass
- return dict(version=2,config=c,languages=list(LANGUAGES.values()),mine=references(),plan=plan,setup=job,auditions=auditions,engines={k:dict(label=v['label'],repo=v['repo'],langs=v['languages'],clone=True)for k,v in MODELS.items()})
+ mine=references()
+ return dict(version=2,config=c,languages=list(LANGUAGES.values()),mine=mine,effectiveReferences=effective_references(c,mine),plan=plan,setup=job,auditions=auditions,engines={k:dict(label=v['label'],repo=v['repo'],langs=v['languages'],clone=True)for k,v in MODELS.items()})
 
 def set_job(**values):
  with LOCK:JOB.update(values);atomic_json(DATA/'setup-job.json',JOB)
@@ -90,8 +92,9 @@ def start_setup(req):
  threading.Thread(target=run_setup,args=(name,codes,jobid),daemon=True).start();return dict(JOB)
 
 def selected_reference(lang,req,c):
- code=req.get('reference')or c.get('references',{}).get(lang)or(lang if(VOICES/f'{lang}.wav').exists()else None)
- if code not in LANGUAGES or not(VOICES/f'{code}.wav').is_file():raise ValueError('Record this language or explicitly choose a saved recording first.')
+ available={code for code in LANGUAGES if(VOICES/f'{code}.wav').is_file()}
+ code=reference_code(lang,c,available,req.get('reference'))
+ if not isinstance(code,str)or code not in LANGUAGES or not(VOICES/f'{code}.wav').is_file():raise ValueError('Record English once to use it by default, or record or choose a reference for this language.')
  return code
 
 def generate(req):
@@ -161,7 +164,7 @@ class Handler(BaseHTTPRequestHandler):
    if url.path=='/api/reference-choice':
     lang=req.get('language');ref=req.get('reference')
     if lang not in config()['languages']or ref not in references():raise ValueError('Choose an existing saved recording.')
-    c=config();refs=c.get('references',{});refs[lang]=ref;save_config(dict(references=refs,profileReady=False));return self.json(state())
+    c=config();available=references();previous=reference_code(lang,c,available);refs=dict(c.get('references',{}));refs[lang]=ref;save_config(dict(references=refs,profileReady=c.get('profileReady',False)if previous==ref else False));return self.json(state())
    if url.path in('/api/generate','/v1/audio/speech'):
     result=generate(req)
     if url.path=='/api/generate':return self.json(result)

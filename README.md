@@ -14,7 +14,10 @@ narration client, capture adapter, renderer and media QA.
 **Languages → Model → Setup → Your voice → Audition**
 
 Choose languages first. The studio explains compatible cloning models, downloads
-and verifies the chosen model, then records or reuses your voice. Listen to an
+and verifies the chosen model, then records or reuses your voice. Commit one
+English recording to use it automatically across the other languages; choose
+**Use this one** only when you want to commit a separate language reference.
+Existing overrides remain in place. Listen to an
 audition in each selected language before saving the profile. The refreshed
 interface has a dark editing-suite layout, live recording bars that build as you
 speak, saved-audio waveforms, playback cursors, clear reference labels and motion

@@ -36,12 +36,19 @@ live under the private data folder. No model weights are bundled.
 3. Start setup. Only that model and its required components download, at pinned
    revisions. Progress distinguishes downloading from loading/verification.
    A download is not marked ready until its model loads. No cloud fallback.
-4. Reuse a recording or click **Record my voice**. Read the displayed passage,
-   stop, listen and **Save this take**. Aim for 5–10 seconds; the accepted range
-   is 3–35 seconds. Existing longer references are preserved. Re-recording
-   retains the previous WAV and transcript under private `voice-history`.
-   No microphone starts automatically. Other saved languages require an explicit
-   reference choice; explain that cross-language references can carry accents.
+4. Record English once, stop, listen and choose **Use this one**. That committed
+   English recording is automatically selected for other languages that have no
+   explicit choice or their own saved recording. Existing own-language references
+   and explicit saved choices are preserved. Cross-language references can carry
+   accents; the user still auditions each target language. To replace one
+   language, record it or preview a saved reference, then choose **Use this one**.
+   Stopping a recording or browsing the selector never commits a replacement.
+   Aim for 5–10 seconds; the accepted range is 3–35 seconds. Existing longer
+   references are preserved. Re-recording retains the previous WAV and transcript
+   under private `voice-history`. No microphone starts automatically. Replacing
+   English stales auditions that used the prior English audio, while an unchanged
+   language-specific reference retains its approval. Selecting the already-active
+   recording is a no-op for readiness. No audition is accepted automatically.
 5. Generate, listen to and accept an audition in every selected language. Click
    **Save my voice profile**. The user's listening approval determines quality;
    recommendation scores do not measure audio quality.

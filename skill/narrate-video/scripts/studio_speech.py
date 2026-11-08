@@ -17,7 +17,7 @@ def generate(text_path,output,language='en',endpoint='http://127.0.0.1:8765'):
         raise ValueError('Complete language/model setup and accept your voice auditions in the studio first')
     if language not in c.get('languages',[]) or language not in models[engine]['langs']:
         raise ValueError('Add this language to your voice profile first; no language substitution')
-    reference=c.get('references',{}).get(language) or language
+    reference=status.get('effectiveReferences',{}).get(language) or c.get('references',{}).get(language) or language
     saved=status.get('mine',{}).get(reference);accepted=c.get('accepted',{}).get(language,{})
     if not saved or accepted.get('engine')!=engine or accepted.get('referenceSha256')!=saved['sha256']:
         raise ValueError('The model or reference changed. Accept a fresh audition first')
@@ -29,7 +29,7 @@ def generate(text_path,output,language='en',endpoint='http://127.0.0.1:8765'):
             if response.headers.get('X-Voice')!=f'{engine}; cloned=True; lang={language}':
                 raise ValueError('Studio did not confirm the selected model, language and recorded voice')
             reference_hash=response.headers.get('X-Voice-Reference-SHA256')
-            if reference_hash!=saved['sha256']:
+            if reference_hash!=saved['sha256'] or response.headers.get('X-Voice-Reference-Language')!=reference:
                 raise ValueError('The reference changed during generation. Review it in the studio first')
             (work/'speech.mp3').write_bytes(response.read())
         command(['ffmpeg','-v','error','-i',work/'speech.mp3','-ar','48000','-ac','1',work/'speech.wav'])
