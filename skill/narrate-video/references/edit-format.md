@@ -50,7 +50,9 @@ declaration; it cannot independently verify a provider or the spoken content.
   English only: it has no é, ñ, ü, en or em dash, or €. The renderer checks
   every caption and title character against the font in use and names any
   missing glyph, so supply an appropriately licensed font for accented Latin
-  and non-Latin text and inspect shaping. Fonts are not bundled. Arabic also
+  and non-Latin text and inspect shaping. Fonts are not bundled; like every
+  asset, the file must sit inside the production folder, so copy in one you
+  may use, such as Inter (SIL Open Font License). Arabic also
   needs Pillow with RAQM (`PIL.features.check("raqm")`); on Windows that needs
   the FriBiDi DLL on `PATH`, which Pillow's wheels do not include.
 
@@ -70,10 +72,50 @@ All are off by default; the default output is unchanged.
 - `transition`: `{"type": "crossfade", "seconds": 0.4}` (0.1 to 1, at most half
   the shortest scene). Each scene still starts on its planned frame and fades
   in over the previous scene's held last frame, so captions, the SRT and the
-  total length do not move. The first `seconds` of each scene are blended;
-  start an action clip after that.
+  total length do not move. Only the picture fades: the header and caption
+  bands switch on the scene's first frame, so a new caption is at full strength
+  when its SRT cue starts. The first `seconds` of each scene's picture are
+  blended; start an action clip after that.
+
+### Studio finish
+
+Also off by default. Use them for a finished, product-film cut; none changes
+action speed, scene timing or the SRT.
+
+- `camera` on a clip scene: editorial camera keys, `[{"t": 1.2, "cx": .3,
+  "cy": .4, "z": 1.6}]`. `t` is scene seconds within the clip (ascending),
+  `cx`/`cy` the centre as a share of the picture, `z` 1 (whole picture) to 3.
+  Each move eases over 0.9 s; one asked for before the last has landed waits
+  for it. Moves, like `push`, are drawn to a fraction of a pixel, so text
+  glides instead of shimmering. The zoom is made on the source pixels, so pair it with a sharp
+  capture ([capture](capture.md)), which also writes these keys. The receipt
+  records `motion: "camera"` and the keys. Like `push`, it is an editorial
+  camera move: it must not suggest behaviour the product did not show. The keys
+  frame the whole capture, so a clip with `camera` cannot also have a `crop`:
+  frame the detail with the camera instead.
+- `captionStyle`: `"lowerThird"` draws each caption as a card over the bottom
+  of the picture (Narrate paper and ink colours with a coral accent) instead of a band below it. The picture
+  takes the band's height. Cards are laid over the finished picture, so they
+  never zoom, and they cut on the SRT's frames, also inside a crossfade. They
+  cover part of the picture: keep the evidence clear of the bottom-left.
+- `music`: `{"level": 0.3}` (0.05 to 1) lays a generated bed
+  (`scripts/soundbed.py`) under the film, ducked while the narrator speaks.
+- `sounds` on a scene: `[{"at": 0.8, "effect": "click"}]`, scene seconds;
+  effects are `click` and `whoosh`, generated when the film is rendered
+  (`scripts/sfx.py`). A whoosh suits a card's first frame; a capture's `sounds`
+  give clicks.
+- `fade`: `{"in": 0.5, "out": 0.8}` seconds (up to 3, at most half the first
+  or last scene) opens from and closes to the frame colour, picture and sound.
+  A caption on those frames fades with them.
+
+A `--silent-preview` has no narration but keeps `music` and `sounds`, so their
+timing can be checked before the voice is ready.
+
+No option speeds up or skips footage. To cut a long wait for an answer, end the
+clip before it and start a new take on the result.
 
 Header/caption zones sit outside the fitted UI. The renderer encodes once,
+normalizes mixed screen captures to limited-range BT.709 H.264/yuv420p,
 strips container metadata, normalizes toward -18 LUFS and writes MP4, captions,
 script and evidence. Measure the final loudness; a target is not a measurement.
 Receipts copy supplied voice/evidence fields; review those strings before sharing.

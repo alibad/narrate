@@ -1,6 +1,13 @@
 # Language-first local voice setup
 
-Open the real HTML microphone studio first. Its flow is **Languages → Model →
+First check `python scripts/studio_speech.py status --language en`, repeating
+`--language` for each requested language. Use a ready saved profile without
+reopening setup or asking for another audition. `--start` starts a stopped
+server; `--open` opens the user’s default browser only when setup is needed.
+Use `NARRATE_VIDEO_DATA` and `NARRATE_VIDEO_PYTHON` for the existing installation.
+Do not stop or restart a studio that was running before the task.
+
+When setup is needed, open the real HTML microphone studio. Its flow is **Languages → Model →
 Setup → Your voice → Audition**. Preserve existing recordings. Do not substitute
 a preset or a static playback page for this workflow.
 
@@ -62,8 +69,9 @@ setup only loads it. No model weights are bundled.
    accents; the user may audition each target language or explicitly share an already-accepted English voice. To replace one
    language, record it or preview a saved reference, then choose **Use this one**.
    Stopping a recording or browsing the selector never commits a replacement.
-   Aim for 5–10 seconds; the accepted range is 3–35 seconds. Existing longer
-   references are preserved. Re-recording retains the previous WAV and transcript
+   Read a connected passage naturally, without rushing to fit a time target; the
+   accepted range is 3–35 seconds. Do not suggest replacing an accepted reference
+   solely because it is longer than ten seconds. Existing references are preserved. Re-recording retains the previous WAV and transcript
    under private `voice-history`. No microphone starts automatically. Replacing
    English stales auditions that used the prior English audio, while an unchanged
    language-specific reference retains its approval. Selecting the already-active

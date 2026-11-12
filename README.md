@@ -11,14 +11,21 @@ explorations. It is separate from Walkthrough Studio.
 `skill/narrate-video/` contains the actual microphone studio, pinned model setup,
 narration client, capture adapter, renderer and media QA.
 
+The production tools support sharp browser and native footage, measured
+phrase captions, camera emphasis, crossfades, optional ducked music and sound
+effects, and consistent screen-capture colour. The agent plans the story,
+reuses a ready saved voice and checks the final transcript and scene boundaries.
+
 **Languages → Model → Setup → Your voice → Audition**
 
 Choose languages first. The studio explains compatible cloning models, downloads
 and verifies the chosen model, then records or reuses your voice. Commit one
 English recording to use it automatically across the other languages; choose
 **Use this one** only when you want to commit a separate language reference.
-Existing overrides remain in place. Listen to an
-audition in each selected language before saving the profile. The refreshed
+Existing overrides remain in place. Listen to language auditions, or explicitly
+share an already-accepted English voice, before saving the profile. Read the full
+recording passage naturally; the studio accepts 3–35 seconds and preserves earlier
+takes. English setup keeps pronunciation aids out of the recording screen. The refreshed
 interface has a dark editing-suite layout, live recording bars that build as you
 speak, saved-audio waveforms, playback cursors, clear reference labels and motion
 that respects reduced-motion settings.
@@ -50,7 +57,9 @@ npm run dev
 ```
 
 The site has a real language/model explorer, a setup guide, a portable skill ZIP
-and ten H.264/AAC preview films with captions and source links. Every film and
+and ten H.264/AAC preview films with captions and source links. A 27-second
+introduction shows setup followed by English and Arabic samples using the same
+English reference. Every film and
 the studio helper have a crawlable watch page with a transcript and video
 structured data; the sitemap includes their video URLs. Footer links connect
 Narrate to Human Quest and the AI Patterns collection. The public site
@@ -79,7 +88,7 @@ eight collection languages; Bengali and Urdu need a separate fluent review.
 ## Local verification and release
 
 `npm run verify` checks selection policy, navigation, assets, real video streams,
-captions and the absence of hosted workflows. The bundled skill has 45 local
+captions and the absence of hosted workflows. The bundled skill has 117 local
 behavioral tests, including CJK wrapping, caption sizing, missing-glyph checks,
 reference preservation, partial model downloads, the NVIDIA model catalog,
 crossfade timing and local stylesheet delivery. On Windows the symlink test

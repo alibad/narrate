@@ -48,7 +48,9 @@ const profileBefore=run('JSON.stringify({config:S.config,mine:S.mine,effective:S
 
 // Opening and changing languages do not generate examples or play sound.
 assert.equal(nativeCalls().length,0);assert.equal(events.filter(e=>e==='native-play').length,0);
-assert(main().includes('FULL ING-glish PASS-ij.'));
+assert(main().includes('Full English passage.'));
+assert(!main().includes('Latin-letter pronunciation guide'));
+assert(!main().includes('Hear language example'));
 await handle('record-tab',{code:'ar'});await handle('record-again');
 assert(main().includes('Naṣṣ kāmil.'));
 assert.equal(nativeCalls().length,0);
@@ -86,13 +88,13 @@ assert.equal(nativeCalls().length,3);assert.equal(run('nativeExamples.ar.revisio
 
 // The audition context requests its own exact passage, not the recording
 // prompt, cached guide or any Latin-letter helper.
-run('recordMode=false;go(5);auditionLang="en";render()');
-assert(main().includes('ING-glish aw-DISH-un.'));
+run('recordMode=false;go(5);auditionLang="ar";render()');
+assert(main().includes('Ikhtibār.'));
 const auditionPart=node();elements.set('.pronunciation[data-pronunciation-context=audition]',auditionPart);
-listeners.input({target:{id:'audition-script',value:'A different exact audition.'}});
-assert(!auditionPart.outerHTML.includes('ING-glish aw-DISH-un.'));
+listeners.input({target:{id:'audition-script',value:'اختبار مختلف.'}});
+assert(!auditionPart.outerHTML.includes('Ikhtibār.'));
 await handle('native-example',{context:'audition'});
-assert.deepEqual(JSON.parse(nativeCalls().at(-1).opts.body),{lang:'en',text:'A different exact audition.',engine:'omnivoice'});
+assert.deepEqual(JSON.parse(nativeCalls().at(-1).opts.body),{lang:'ar',text:'اختبار مختلف.',engine:'omnivoice'});
 assert.equal(run('JSON.stringify({config:S.config,mine:S.mine,effective:S.effectiveReferences})'),profileBefore);
 assert.deepEqual(Object.keys(run('auditions')),[]);
 

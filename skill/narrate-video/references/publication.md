@@ -13,5 +13,7 @@ assessments, credentials, browser state, reference recordings and product assets
 outside a public package. Do not ship work-specific examples under neutral names.
 
 The example card is newly authored neutral HTML. No recorded voice, model
-weights or product capture is bundled. Optional provider and browser paths
+weights or product capture is bundled. The music bed (`scripts/soundbed.py`)
+and the click and whoosh (`scripts/sfx.py`) are generated when a film is
+rendered, so no third-party sound ships. Optional provider and browser paths
 belong in production configuration, not in a redistributed skill.

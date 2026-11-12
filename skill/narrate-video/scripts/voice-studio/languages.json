@@ -5,13 +5,13 @@
     "native": "English",
     "omni_id": "en",
     "rtl": false,
-    "prompt": "I am recording my voice to make clear, natural narration. Each sentence sounds like me.",
+    "prompt": "I am recording my voice for narrated videos. I speak at a steady pace, with a short pause between ideas. This sample will help the narration sound like me.",
     "sample": "This is my voice, ready to tell the next story.",
     "flag": "gb",
     "speechLocale": "en-US",
     "pronunciation": {
-      "latin": "Eye am ree-KOR-ding my voys tuh mayk kleer, NACH-er-ul nuh-RAY-shun. Eech SEN-tens sowndz lyk mee.",
-      "note": "Approximate English sound guide; stress is marked with capitals. Keep your own comfortable accent."
+      "latin": "Eye am ree-KOR-ding my voys for nuh-RAY-tid VID-ee-ohz. Eye speek at uh STED-ee pays, with uh short pawz bih-TWEEN eye-DEE-uhz. This SAM-pul wil help thuh nuh-RAY-shun sownd lyk mee.",
+      "note": "Optional approximate English sound guide. Read in your own natural voice and accent."
     },
     "samplePronunciation": {
       "latin": "This iz my voys, RED-ee tuh tel thuh nekst STOR-ee.",
@@ -473,8 +473,8 @@
     "rtl": true,
     "prompt": "أسجّل صوتي عشان أسوي شرح واضح وطبيعي. أتكلم بهدوء وبنفس سرعتي المعتادة، وأوقف شوي بين الأفكار.",
     "sample": "",
-    "flag": "qa",
-    "speechLocale": "ar-QA",
+    "flag": "language",
+    "speechLocale": "ar",
     "pronunciation": {
       "latin": "Asajjil ṣawtī ʿashān asawwī sharḥ wāḍiḥ wa-ṭabīʿī. Atkallam bi-hudūʾ wa-bi-nafs surʿatī il-muʿtādah, wa-awqaf shway bayn il-afkār.",
       "note": "Approximate Gulf Arabic transliteration; local varieties differ. A Standard Arabic example is not a Gulf dialect model. Use a dialect-matching example when available."

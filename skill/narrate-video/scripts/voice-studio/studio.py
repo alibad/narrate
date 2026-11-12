@@ -49,7 +49,7 @@ def state():
    if a.get('id')and a.get('language')in c['languages']and a.get('engine')==c['engine']:auditions[a['language']]=a
   except (OSError,ValueError):pass
  mine=references()
- return dict(version=2,config=c,languages=list(LANGUAGES.values()),mine=mine,effectiveReferences=effective_references(c,mine),effectiveApprovals={code:approval_for(code,c,mine)for code in c['languages']},pronunciation=pronunciation_capabilities(LANGUAGES,c,DATA),plan=plan,setup=job,auditions=auditions,engines={k:dict(label=v['label'],repo=v['repo'],langs=v['languages'],clone=True)for k,v in((k,variant(k))for k in MODELS)})
+ return dict(version=2,pid=os.getpid(),config=c,languages=list(LANGUAGES.values()),mine=mine,effectiveReferences=effective_references(c,mine),effectiveApprovals={code:approval_for(code,c,mine)for code in c['languages']},pronunciation=pronunciation_capabilities(LANGUAGES,c,DATA),plan=plan,setup=job,auditions=auditions,engines={k:dict(label=v['label'],repo=v['repo'],langs=v['languages'],clone=True)for k,v in((k,variant(k))for k in MODELS)})
 
 def set_job(**values):
  with LOCK:JOB.update(values);atomic_json(DATA/'setup-job.json',JOB)
@@ -173,7 +173,7 @@ class Handler(BaseHTTPRequestHandler):
      source=Path(td)/'upload';source.write_bytes(body);wav=Path(td)/'voice.wav'
      subprocess.run(['ffmpeg','-v','error','-i',str(source),'-ac','1','-ar','24000','-af','loudnorm=I=-18:TP=-2',str(wav)],stdin=subprocess.DEVNULL,check=True,capture_output=True)
      seconds=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',str(wav)]))
-     if not 3<=seconds<=35:raise ValueError('Record at least 3 seconds and no more than 35 seconds. Aim for 5–10 seconds.')
+     if not 3<=seconds<=35:raise ValueError('Record the whole passage naturally, between 3 and 35 seconds.')
      with LOCK:
       target=VOICES/f'{lang}.wav'
       if target.exists():

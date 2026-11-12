@@ -19,7 +19,25 @@ result. Never make the user edit JSON.
 - With neither studio runtime, use speech the user supplies or a voice tool the
   user chooses ([speech and auditions](references/speech.md)), and say so.
 
+## Work without interrupting
+
+Generate, render and check silently. Do not play audio through the speakers.
+Deliver a playable file for the user to review when they choose. Transcription,
+frame inspection and loudness measurements do not establish listening approval.
+
 ## Choose a small story
+
+Before capture, define the audience, their question, the useful result and a
+scene-by-scene outline. Give each scene one job and pair its narration with
+visible evidence. Prefer explanation of meaning over narrating every click.
+Choose detail shots, diagrams and pauses where they make the idea clearer.
+Keep a shot list in the private production folder; the agent writes all plans.
+
+For a UI walkthrough, follow the task through the interface in order. Show the
+control being used, its resulting state and enough surrounding UI to keep the
+viewer oriented. Tie narration to the visible action and leave time to read it.
+Use continuous action clips and purposeful holds; title cards, feature montages
+and unrelated output examples need a clear reason or an explicit request.
 
 Start with the useful result, then the few steps needed to understand it. Use
 the requested length and format; otherwise make a short first cut. One idea per
@@ -34,7 +52,13 @@ successful demonstration.
 
 ## Establish the narrator
 
-**Open the recording studio first** ([local studio](references/local-studio.md)).
+**Check the saved voice first** ([local studio](references/local-studio.md)):
+`python scripts/studio_speech.py status --language en` (use the requested languages).
+A ready saved profile needs no new audition or setup. Use it directly. Add
+`--start` when the studio is stopped; use the actual installed audio Python and
+private data folder. Preserve a server that was already running. Only when setup
+is needed, add `--open` to hand the studio to the user in their own browser.
+Do not operate their recording or listening controls.
 The user chooses languages, reviews compatible cloning models, starts setup,
 records or reuses their voice, then either accepts per-language auditions or
 explicitly shares their already-accepted English reference across the selected
@@ -61,9 +85,12 @@ provider, endpoint, credentials, model download or fallback. State the actual
 provider, model and revision, voice reference or preset, language and delivery
 settings. Never call a preset the user's voice.
 
-Generate a short audition with the intended text; `scripts/studio.py` builds a
+For a new or changed voice, generate a short audition with the intended text; `scripts/studio.py` builds a
 local comparison page for several takes. Let the user listen when preference
-matters; otherwise pick a clear take and say which. Transcribe every phrase and
+matters; otherwise pick a clear take and say which. Preserve the exact reference recording when matching a voice the user already
+likes. Generate connected passages for natural phrasing; do not split speech
+simply to fit caption boundaries. Time the captions afterward. Compare the same
+passage before replacing a preferred reference. Transcribe the generated speech and
 check for omissions, invented endings, numbers and negations. Cloned voices
 often misread acronyms such as "AI": spell them out ("A I,") or reword, then
 check again. Regenerate a bad phrase before assembling the film.
@@ -95,7 +122,10 @@ Read [edit format](references/edit-format.md). The offline renderer takes local
 images, clips and speech, keeps captions outside the picture, keeps action speed,
 holds a clip's last frame and exports MP4, SRT, narration and a receipt. For a
 finished film it can also set a frame colour, hide the label header, push in
-slowly on stills and crossfade between scenes, without moving any timing.
+slowly on stills and crossfade between scenes, without moving any timing. It also supports
+smooth camera moves on clips, lower-third captions, optional ducked music,
+generated click/whoosh effects and fades. Use finishing choices only when they
+help the audience; keep evidence readable and action speed unchanged.
 
 ```sh
 python scripts/render.py production/plan.json --check
@@ -108,9 +138,14 @@ Time captions from measured phrase audio or reviewed alignment data.
 estimate word positions. Captions and SRT share the same frame boundaries. A
 silent storyboard needs `--silent-preview` and is never a finished video.
 
+For browser footage, use `sharp: true` and a properly scaled browser for
+high-resolution H.264. `studio.focus`, `studio.wide` and `studio.click` capture
+camera and sound marks. Read [capture](references/capture.md) for the geometry
+checks and installed-runtime requirements. Native footage uses the same editor.
+
 Follow [QA](references/qa.md): decode, transcribe the final audio and compare it
-in order, measure loudness, inspect every cut, review at phone size and play the
-whole film at normal speed with sound. Checks you could not do stay pending.
+in order, measure loudness, inspect every cut, review at phone size, and deliver the
+whole film for the user to review at normal speed with sound. Checks you could not do stay pending.
 Keep synthetic tests separate from behavior observed in the real product.
 
 ## Deliver
@@ -120,3 +155,7 @@ shows and any material gap in verification. Uploading, publishing or sending
 needs authorization for that action. Before redistributing, review every file
 and spoken sample for private content and establish the rights to everything in
 it. See [publication](references/publication.md).
+
+Use Narrate’s existing identity or the subject’s authorized identity for cards
+and styling. Do not import employer/client themes or brand assets. Stop a studio
+only if this task started it and no setup or generation is active.

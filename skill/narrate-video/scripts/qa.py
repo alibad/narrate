@@ -4,13 +4,39 @@ import argparse
 import difflib
 import json
 import re
+import unicodedata
 from pathlib import Path
 from render import command, probe, digest
 
 
+# Arabic harakat (short vowels, shadda, sukun, U+064B–U+065F and U+0670) and tatweel (U+0640) are dropped from both
+# sides on purpose: transcripts rarely carry them, so a diacritized script still matches. Every other combining mark
+# stays inside its word, so Hindi कि and की, or Thai กิน and กัน, stay different words.
+ARABIC_DIACRITICS = re.compile('[\u0640\u064b-\u065f\u0670]')
+
+
+def wordlike(c):
+    return unicodedata.category(c)[0] in 'LNM'
+
+
 def words(text):
-    # Preserve numbers, negations, Arabic letter distinctions, order and repetition.
-    return re.findall(r"[^\W_]+(?:['’][^\W_]+)?", text.casefold(), re.UNICODE)
+    """Ordered words: runs of letters, digits and combining marks. An apostrophe between letters stays in the word,
+    and a sign directly before a number stays on it (-50 is not 50). Order, repetition and negations are kept."""
+    text = ARABIC_DIACRITICS.sub('', unicodedata.normalize('NFC', text)).casefold()
+    out, cur = [], ''
+    for i, c in enumerate(text):
+        after = text[i+1] if i+1 < len(text) else ''
+        if wordlike(c):
+            cur += c
+        elif c in "'’" and cur and after and wordlike(after):
+            cur += c
+        elif c in '+-−' and not cur and after.isdigit() and not (i and wordlike(text[i-1])):
+            cur = '+' if c == '+' else '-'
+        else:
+            if cur: out.append(cur)
+            cur = ''
+    if cur: out.append(cur)
+    return out
 
 
 ONES='zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split()
@@ -27,12 +53,14 @@ def spoken(n):
 
 
 def english_numbers(text):
-    # ASR writes "2,000" and "71%" where the script says "two thousand" and "seventy-one percent".
+    # ASR writes "2,000", "71%" and "-50" where the script says "two thousand", "seventy-one percent" and
+    # "minus fifty". A sign counts only at the start of a token, so "3-5" and "COVID-19" are not negatives.
     def say(m):
-        out=spoken(int(m.group(1).replace(',','')))
-        if m.group(2):out+=' point '+' '.join(ONES[int(d)] for d in m.group(2))
-        return f" {out}{' percent' if m.group(3) else ''} "
-    return re.sub(r'(?<!\w)(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?\s*(%)?',say,text)
+        out=spoken(int(m.group(2).replace(',','')))
+        if m.group(3):out+=' point '+' '.join(ONES[int(d)] for d in m.group(3))
+        sign={'-':'minus ','−':'minus ','+':'plus '}.get(m.group(1) or '','')
+        return f" {sign}{out}{' percent' if m.group(4) else ''} "
+    return re.sub(r'(?:(?<![\w.])([-−+])(?=\d))?(?<!\w)(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?\s*(%)?',say,text)
 
 
 def compare(expected, heard, language=''):
@@ -41,6 +69,15 @@ def compare(expected, heard, language=''):
     a,b=words(expected),words(heard)
     changes=[dict(op=op,expected=a[i:j],heard=b[k:l]) for op,i,j,k,l in difflib.SequenceMatcher(a=a,b=b,autojunk=False).get_opcodes() if op!='equal']
     return dict(exactOrderedMatch=bool(a) and a==b,changes=changes,expectedWords=len(a),heardWords=len(b),numbersAsWords=numbers)
+
+
+def spoken_script(narration, titles):
+    """Drop the renderer's scene headings (`N. Title` opening each block); keep every spoken line, numbered or not."""
+    lines=narration.splitlines();out=[];n=0
+    for i,line in enumerate(lines):
+        if n<len(titles) and line==f'{n+1}. {titles[n]}' and (i==0 or not lines[i-1].strip()):n+=1;continue
+        out.append(line)
+    return '\n'.join(out)
 
 
 def inspect(video, evidence, output, transcript=None):
@@ -76,8 +113,7 @@ def inspect(video, evidence, output, transcript=None):
                 audioTranscript='pending',visualReview='pending',captionAlignment='pending',fullPlayback='pending')
     if transcript:
         text=(video.parent/'narration.txt').read_text(encoding='utf-8')
-        # Renderer headings occupy separate numbered lines; exclude them from expected speech.
-        text='\n'.join(line for line in text.splitlines() if not re.match(r'^\d+\. ',line))
+        text=spoken_script(text,[s.get('title','') for s in data.get('scenes',[])])
         report['audioTranscript']=compare(text,transcript.read_text(encoding='utf-8'),(data.get('voice') or {}).get('language',''))
         report['transcriptSha256']=digest(transcript)
     (output/'qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
@@ -86,4 +122,6 @@ def inspect(video, evidence, output, transcript=None):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('video',type=Path);p.add_argument('evidence',type=Path);p.add_argument('output',type=Path);p.add_argument('--transcript',type=Path)
-    a=p.parse_args();inspect(a.video,a.evidence,a.output,a.transcript)
+    a=p.parse_args();r=inspect(a.video,a.evidence,a.output,a.transcript);t=r['audioTranscript'];l=r['loudness']
+    heard='not compared (pass --transcript)' if t=='pending' else 'exact ordered match' if t['exactOrderedMatch'] else f"{len(t['changes'])} difference(s) to review"
+    print(f"Decode passed; {l['input_i']} LUFS, {l['input_tp']} dBTP; transcript: {heard}. Pending: visual review, caption timing, full playback. Details: {a.output/'qa.json'}")

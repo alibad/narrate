@@ -52,17 +52,26 @@ can save. It generates no speech, loads no remote fonts and has no server/API.
 Selection changes only that page; it does not configure the speech provider.
 
 For close caption alignment, generate one natural short phrase per file. Keep
-clauses intact so synthesis remains conversational. After listening, write:
+clauses intact so synthesis remains conversational. After transcribing each
+phrase (never play it aloud; see [QA](qa.md) for the transcription command), write:
 
 ```json
 {"phrases": [{"audio": "phrase.wav", "text": "The exact spoken phrase."}]}
 ```
 
-Run `python scripts/voice.py compose PHRASES NEW_FOLDER`. Use its `narration.wav`
-and `captions.json` in the edit plan. Caption edges follow audio file durations
-at 48 kHz; silence within a file is still included. Listen to the joined track
-for broken prosody, overlaps, excessive gaps or a visibly early caption. These
-are phrase timings, not automatic word alignment. A provider's forced alignment
+Compose once per scene: `python scripts/voice.py compose scene-1-phrases.json
+narration/scene-1`. That scene's `audio` is the folder's `narration.wav`, and its
+`say` and `captions` come from `captions.json`. Caption edges follow audio file durations
+at 48 kHz; silence within a file is still included, so a phrase with leading
+silence shows its caption early. Check this silently before composing: measure
+each phrase's leading and trailing silence with
+`ffmpeg -i phrase.wav -af silencedetect=noise=-45dB:d=0.25 -f null -` (a
+`silence_start: 0` line means the file opens silent; its `silence_end` is when
+speech starts). Trim or regenerate a phrase whose speech starts more than about
+0.3 s in, or whose trailing silence would leave a long gap. Transcribe each
+phrase to catch overlaps or lost words. Broken prosody and the exact feel of
+caption timing need ears: leave them pending for the user's listen at delivery,
+never report them as checked. These are phrase timings, not automatic word alignment. A provider's forced alignment
 may give finer timings, but still requires review against the final audio.
 
 English and Arabic are independent acceptance paths. Check supported language,

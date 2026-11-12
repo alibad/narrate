@@ -1,21 +1,13 @@
 WEBVTT
 
 1
-00:00:00.000 --> 00:00:07.200
-Choose the languages you want to narrate in. Narrate checks which local voice models cover all of them.
+00:00:00.000 --> 00:00:07.767
+Choose your languages and set up a local voice model. Record your voice once, then hear it in English and Arabic.
 
 2
-00:00:07.567 --> 00:00:14.900
-Review the model recommendation and its reasons. You can choose another compatible model before setup.
+00:00:08.200 --> 00:00:16.367
+This is my voice in English. I can explain an idea or tell a story in my own voice, with speech generated on my computer.
 
 3
-00:00:15.267 --> 00:00:22.100
-Setup downloads only the selected model and checks that it loads. An existing model can be reused.
-
-4
-00:00:22.467 --> 00:00:29.433
-Reuse a saved voice recording, or record a short passage. The waveform comes from your actual audio.
-
-5
-00:00:29.800 --> 00:00:38.233
-Generate an audition in each language and listen before accepting it. Your recordings and speech stay on your computer.
+00:00:16.733 --> 00:00:26.667
+وهذا صوتي باللغة العربية. أستطيع أن أشرح فكرة أو أحكي قصة بصوتي، مع توليد الكلام مباشرة على جهازي.
