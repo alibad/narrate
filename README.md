@@ -32,7 +32,8 @@ that respects reduced-motion settings.
 
 The voice studio runs on Apple Silicon macOS (Python 3.12 with MLX-Audio 0.5.1:
 OmniVoice, Chatterbox Multilingual and Qwen3-TTS Base) or on Windows and Linux
-with an NVIDIA GPU (CUDA PyTorch with chatterbox-tts: Chatterbox Multilingual).
+with an NVIDIA GPU (CUDA PyTorch with omnivoice or chatterbox-tts: OmniVoice and
+Chatterbox Multilingual).
 Both need FFmpeg. The core renderer runs anywhere with Python, Pillow and
 FFmpeg, and also accepts supplied audio. Weights download separately. No cloud
 speech key is required. See the bundled `references/local-studio.md` for the

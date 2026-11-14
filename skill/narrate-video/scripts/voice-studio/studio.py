@@ -1,10 +1,10 @@
 """Local language-first voice setup, recording and auditions. No cloud speech."""
-import gc,hashlib,importlib.util,json,os,shutil,subprocess,sys,tempfile,threading,time,uuid
+import gc,hashlib,json,os,shutil,subprocess,sys,tempfile,threading,time,uuid
 from datetime import datetime,timezone
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse,parse_qs,unquote
-from catalog import LANGUAGES,MODELS,RUNTIMES,recommend,validate_languages,model_path,installed,runtime,variant,hub,download_dirs
+from catalog import LANGUAGES,MODELS,RUNTIMES,recommend,validate_languages,model_path,installed,runtime,variant,hub,download_dirs,missing_package
 from engines import prepare,speak
 from reference_policy import reference_code,effective_references,approval_for
 from pronunciation import capabilities as pronunciation_capabilities,synthesize as synthesize_pronunciation
@@ -90,7 +90,8 @@ def start_setup(req):
  rt=runtime()
  if rt=='none':raise ValueError('Local voice models need an Apple Silicon Mac, or an NVIDIA GPU with CUDA PyTorch. No cloud fallback is configured.')
  if not variant(name)['available']:raise ValueError(f"{MODELS[name]['label']} is not available for {RUNTIMES[rt]} yet. Choose another model; none is substituted.")
- if rt=='cuda' and not importlib.util.find_spec('chatterbox'):raise ValueError('Install the chatterbox-tts package in the Python that runs this studio first. See the local studio guide.')
+ needs=missing_package(name)
+ if needs:raise ValueError(f'Install the {needs} package in the Python that runs this studio first. See the local studio guide.')
  if not JOB_LOCK.acquire(blocking=False):raise ValueError('A model setup is already running. Let it finish before starting another.')
  save_config(dict(languages=codes,preference=pref,profileReady=False))
  jobid=uuid.uuid4().hex

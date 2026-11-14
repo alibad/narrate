@@ -1,16 +1,19 @@
 """Behavioral setup-policy and local HTTP tests. No model download or GPU generation."""
 import importlib.util,json,os,sys,tempfile,threading,unittest,urllib.request,urllib.error,wave,math,struct,hashlib
+from unittest import mock
 from pathlib import Path
 SCRIPTS=Path(__file__).resolve().parents[1]/'scripts/voice-studio';sys.path.insert(0,str(SCRIPTS))
 # The policy tests describe the Apple Silicon catalog unless a test chooses another runtime.
 os.environ['NARRATE_VIDEO_RUNTIME']='mlx'
 from catalog import recommend,validate_languages,MODELS,LANGUAGES,installed
+import catalog
 spec=importlib.util.spec_from_file_location('setup_server',SCRIPTS/'studio.py');server=importlib.util.module_from_spec(spec);spec.loader.exec_module(server)
 
 class CudaPolicyTests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name);self.saved={k:os.environ.get(k)for k in('NARRATE_VIDEO_RUNTIME','HF_HUB_CACHE')}
   os.environ.update(NARRATE_VIDEO_RUNTIME='cuda',HF_HUB_CACHE=str(self.root/'hub'))
+  importable=mock.patch.object(catalog,'_importable',return_value=True);importable.start();self.addCleanup(importable.stop)
  def tearDown(self):
   for k,v in self.saved.items():
    if v is None:os.environ.pop(k,None)
@@ -19,8 +22,33 @@ class CudaPolicyTests(unittest.TestCase):
  def test_nvidia_offers_only_models_with_a_cuda_build(self):
   plan=recommend(['en','ar'],self.root);self.assertEqual(plan['recommended'],'chatterbox');self.assertEqual(plan['runtime']['label'],'NVIDIA GPU · CUDA')
   c=next(x for x in plan['models']if x['id']=='chatterbox');self.assertEqual(c['repo'],'ResembleAI/chatterbox');self.assertEqual(c['bytes'],MODELS['chatterbox']['cuda']['bytes'])
-  o=next(x for x in plan['models']if x['id']=='omnivoice');self.assertFalse(o['eligible']);self.assertIn('Apple Silicon',o['reason'])
- def test_gulf_arabic_has_no_nvidia_model_yet(self):self.assertIsNone(recommend(['afb'],self.root)['recommended'])
+  o=next(x for x in plan['models']if x['id']=='omnivoice');self.assertTrue(o['eligible']);self.assertEqual(o['repo'],'k2-fsa/OmniVoice');self.assertEqual(o['bytes'],MODELS['omnivoice']['cuda']['bytes'])
+  q=next(x for x in plan['models']if x['id']=='qwen3-base');self.assertFalse(q['eligible']);self.assertIn('Apple Silicon',q['reason'])
+ def test_gulf_arabic_runs_on_nvidia_through_omnivoice(self):
+  p=recommend(['afb'],self.root);self.assertEqual(p['recommended'],'omnivoice');self.assertEqual([x['id']for x in p['models']if x['eligible']],['omnivoice'])
+ def test_a_build_whose_package_is_missing_is_named_and_not_offered(self):
+  with mock.patch.object(catalog,'_importable',side_effect=lambda module:module!='omnivoice'):
+   p=recommend(['en'],self.root,'reuse','omnivoice')
+  o=next(x for x in p['models']if x['id']=='omnivoice');self.assertFalse(o['eligible']);self.assertEqual(o['needs'],'omnivoice==0.2.1');self.assertIn('omnivoice==0.2.1',o['reason'])
+  self.assertEqual(p['recommended'],'chatterbox')
+ def test_nvidia_omnivoice_is_found_complete_in_the_hugging_face_cache(self):
+  c=MODELS['omnivoice']['cuda'];snap=self.root/'hub'/('models--'+c['repo'].replace('/','--'))/'snapshots'/c['revision']
+  for f in c['files']:(snap/f).parent.mkdir(parents=True,exist_ok=True);(snap/f).write_bytes(b'fixture')
+  self.assertTrue(installed('omnivoice',self.root));(snap/'audio_tokenizer/model.safetensors').unlink();self.assertFalse(installed('omnivoice',self.root))
+ def test_every_offered_language_has_an_omnivoice_language_id(self):
+  self.assertEqual(MODELS['omnivoice']['languages'],list(LANGUAGES));self.assertTrue(all(LANGUAGES[c].get('omni_id')for c in LANGUAGES))
+ @unittest.skipUnless(importlib.util.find_spec('numpy'),'the studio engine needs numpy')
+ def test_nvidia_omnivoice_speaks_with_the_recording_and_its_read_text(self):
+  import numpy as np,engines
+  class Fake:
+   sampling_rate=24000;calls=[]
+   def generate(self,**kw):self.calls.append(kw);return [np.full(2400,.25,dtype=np.float32)]
+  fake=Fake();ref=self.root/'ref.wav';ref.write_bytes(b'fixture');out=self.root/'out.wav'
+  with mock.patch.object(engines,'installed',return_value=True),mock.patch.dict(engines._loaded,{'omnivoice':fake},clear=True):
+   r=engines.speak('omnivoice','ar','مرحبا',str(out),str(ref),'Read text.',self.root)
+  self.assertEqual(fake.calls,[dict(text='مرحبا',language='arb',ref_audio=str(ref),ref_text='Read text.')])
+  self.assertEqual((r['model'],r['revision'],r['seconds'],r['fallback']),('k2-fsa/OmniVoice',MODELS['omnivoice']['cuda']['revision'],.1,False))
+  with wave.open(str(out))as w:self.assertEqual((w.getframerate(),w.getnframes()),(24000,2400))
  def test_nvidia_chatterbox_is_found_complete_in_the_hugging_face_cache(self):
   c=MODELS['chatterbox']['cuda'];snap=self.root/'hub'/('models--'+c['repo'].replace('/','--'))/'snapshots'/c['revision'];snap.mkdir(parents=True)
   for f in c['files'][:-1]:(snap/f).write_bytes(b'fixture')
@@ -93,7 +121,10 @@ class HttpTests(unittest.TestCase):
    os.environ['NARRATE_VIDEO_RUNTIME']='none'
    status,data=self.request('/api/setup',{'languages':['en'],'model':'chatterbox'});self.assertEqual(status,400);self.assertIn('Apple Silicon Mac, or an NVIDIA GPU',data['error'])
    os.environ['NARRATE_VIDEO_RUNTIME']='cuda'
-   status,data=self.request('/api/setup',{'languages':['en'],'model':'omnivoice'});self.assertEqual(status,400);self.assertIn('not available for NVIDIA',data['error'])
+   status,data=self.request('/api/setup',{'languages':['en'],'model':'qwen3-base'});self.assertEqual(status,400);self.assertIn('not available for NVIDIA',data['error'])
+   with mock.patch.object(catalog,'_importable',return_value=False):
+    status,data=self.request('/api/setup',{'languages':['en'],'model':'omnivoice'})
+   self.assertEqual(status,400);self.assertIn('Install the omnivoice==0.2.1 package',data['error'])
   finally:os.environ['NARRATE_VIDEO_RUNTIME']='mlx'
   self.assertFalse((self.root/'models').exists())
  def test_every_language_flag_is_served_and_paths_cannot_escape(self):

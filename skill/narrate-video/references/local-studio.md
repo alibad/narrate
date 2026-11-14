@@ -19,15 +19,19 @@ The studio picks its runtime from the computer it runs on:
   3.12 and MLX-Audio 0.5.1. For a new machine, create an isolated Python 3.12
   environment and install `mlx-audio==0.5.1`, `huggingface-hub` and the core
   Pillow requirement there.
-- **Windows or Linux with an NVIDIA GPU (CUDA):** Chatterbox Multilingual from
-  the upstream PyTorch checkpoint. Use a Python whose PyTorch reports
-  `torch.cuda.is_available()`, with `chatterbox-tts` and `huggingface-hub`
-  installed. Tested with chatterbox-tts 0.1.7 and torch 2.11 (CUDA 12.8) on an
-  RTX 5090. chatterbox-tts pins an older torch that has no kernels for the
-  newest cards, so on those install it into a virtual environment built with
-  `--system-site-packages` over a working CUDA torch instead of letting it
-  downgrade torch. OmniVoice and Qwen3-TTS Base have no CUDA build here yet; the
-  studio shows them as not available rather than substituting.
+- **Windows or Linux with an NVIDIA GPU (CUDA):** OmniVoice and Chatterbox
+  Multilingual from their upstream PyTorch checkpoints. Use a Python whose
+  PyTorch reports `torch.cuda.is_available()`, with `huggingface-hub` and the
+  model's package: `omnivoice==0.2.1` (needs transformers 5.3 or newer) or
+  `chatterbox-tts==0.1.7` (pins transformers 5.2.0 and an older torch). Those
+  pins conflict, so give each model its own virtual environment, built with
+  `--system-site-packages` over a working CUDA torch so that nothing downgrades
+  torch, and start the studio from the environment of the model you use. The
+  studio marks a model whose package that Python lacks as needing it rather
+  than substituting. Tested with torch 2.11 (CUDA 12.8) on an RTX 5090:
+  OmniVoice with transformers 5.4.0, Chatterbox in its own environment.
+  Qwen3-TTS Base has no CUDA build here yet; the studio shows it as not
+  available.
 
 Make FFmpeg/ffprobe available in either case. Never alter a working speech
 environment. `NARRATE_VIDEO_RUNTIME=mlx|cuda|none` overrides detection, for
@@ -84,18 +88,19 @@ setup only loads it. No model weights are bundled.
 
 | Model | Coverage in this studio | Total model data | Runs on | Selection notes |
 |---|---|---:|---|---|
-| OmniVoice | All 32 offered languages/varieties | ~1.64 GB | Mac | Broad coverage, including offered Arabic varieties |
+| OmniVoice | All 32 offered languages/varieties | ~1.64 GB (Mac) / ~3.27 GB (NVIDIA) | Mac, NVIDIA | Broad coverage, including offered Arabic varieties; weights are CC BY-NC 4.0 (non-commercial) |
 | Chatterbox Multilingual | 23 languages | ~1.43 GB (Mac) / ~3.21 GB (NVIDIA) | Mac, NVIDIA | Mac size includes the ~495 MB S3 speech tokenizer |
 | Qwen3-TTS Base 1.7B | 10 languages | ~4.54 GB | Mac | Cloning checkpoint; excludes Arabic |
 
-The Mac builds are pinned MLX conversions; the NVIDIA build is the upstream
-ResembleAI checkpoint at a pinned revision. See `scripts/voice-studio/catalog.py`
+The Mac builds are pinned MLX conversions; the NVIDIA builds are the upstream
+k2-fsa and ResembleAI checkpoints at pinned revisions. See `scripts/voice-studio/catalog.py`
 for exact repositories, revisions, dependencies and the eligibility policy. The Qwen
 CustomVoice checkpoint is not offered as a cloning model. Coverage is a
 capability filter, not a guarantee of pronunciation or dialect quality.
 
 Primary references: [OmniVoice](https://github.com/k2-fsa/OmniVoice), its
 [language list](https://github.com/k2-fsa/OmniVoice/blob/master/docs/languages.md),
+[upstream OmniVoice checkpoint](https://huggingface.co/k2-fsa/OmniVoice),
 [Chatterbox MLX](https://huggingface.co/mlx-community/chatterbox-8bit),
 [upstream Chatterbox](https://huggingface.co/ResembleAI/chatterbox), and
 [Qwen3-TTS Base](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-Base).

@@ -14,7 +14,7 @@ result. Never make the user edit JSON.
 
 - **Voice studio** (record, clone, audition): an Apple Silicon Mac (OmniVoice,
   Chatterbox Multilingual, Qwen3-TTS Base) or Windows/Linux with an NVIDIA GPU
-  (Chatterbox Multilingual). See [local studio](references/local-studio.md).
+  (OmniVoice, Chatterbox Multilingual). See [local studio](references/local-studio.md).
 - **Renderer and QA**: any system with Python 3.12+, Pillow and FFmpeg.
 - With neither studio runtime, use speech the user supplies or a voice tool the
   user chooses ([speech and auditions](references/speech.md)), and say so.

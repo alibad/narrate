@@ -11,10 +11,17 @@ def _load(name,data):
  if name not in MODELS:raise ValueError('Choose a supported model.')
  if not installed(name,data):raise ValueError('Set up this model before generating speech.')
  if name not in _loaded and runtime()=='cuda':
-  from chatterbox.mtl_tts import ChatterboxMultilingualTTS
   import torch
+  if 'cuda' not in MODELS[name]:raise ValueError('This model has no NVIDIA build. Choose another model; none is substituted.')
   _loaded.clear();gc.collect();torch.cuda.empty_cache()
-  _loaded[name]=ChatterboxMultilingualTTS.from_local(model_path(name,data),'cuda')
+  if name=='omnivoice':
+   from omnivoice import OmniVoice
+   model=OmniVoice.from_pretrained(str(model_path(name,data)),device_map='cuda',dtype=torch.float16)
+   if getattr(model,'audio_tokenizer',None)is None or getattr(model,'text_tokenizer',None)is None:raise RuntimeError('OmniVoice tokenizers did not load.')
+   _loaded[name]=model
+  else:
+   from chatterbox.mtl_tts import ChatterboxMultilingualTTS
+   _loaded[name]=ChatterboxMultilingualTTS.from_local(model_path(name,data),'cuda')
  if name not in _loaded:
   from mlx_audio.tts.utils import load_model
   _loaded.clear();gc.collect()
@@ -57,7 +64,10 @@ def _speak(name,lang,text,out,ref_audio,ref_text,data):
  import numpy as np
  with _lock:
   model=_load(name,data);start=time.time();cuda=runtime()=='cuda'
-  if cuda:
+  if cuda and name=='omnivoice':
+   # OmniVoice splits long text into chunks itself and conditions on the recording's read text.
+   parts=[np.asarray(a,dtype=np.float32).reshape(-1) for a in model.generate(text=text,language=LANGUAGES[lang]['omni_id'],ref_audio=ref_audio,ref_text=ref_text)];rate=model.sampling_rate
+  elif cuda:
    parts=[model.generate(piece,language_id=lang,audio_prompt_path=ref_audio).squeeze(0).cpu().numpy().reshape(-1) for piece in _sentences(text)];rate=model.sr
   else:
    kw=dict(ref_audio=ref_audio,verbose=False)
