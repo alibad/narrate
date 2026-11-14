@@ -1,7 +1,9 @@
 import hashlib,zipfile,re,subprocess
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];skill=ROOT/'skill/narrate-video'
-files=sorted(p for p in skill.rglob('*')if p.is_file()and '__pycache__'not in p.parts and p.name!='FILES.sha256')
+# Order by case-sensitive path parts, as Linux does, so Windows builds the same FILES.sha256 and zip bytes.
+def order(p):return p.relative_to(skill).parts
+files=sorted((p for p in skill.rglob('*')if p.is_file()and '__pycache__'not in p.parts and p.name!='FILES.sha256'),key=order)
 # A Windows checkout has CRLF text and no executable bits; package git's LF text and recorded modes on every platform.
 def content(p):
  data=p.read_bytes();return data if b'\0' in data else data.replace(b'\r\n',b'\n')
@@ -15,7 +17,7 @@ for p in files:
 (skill/'FILES.sha256').write_text(''.join(f'{hashlib.sha256(content(p)).hexdigest()}  {p.relative_to(skill).as_posix()}\n'for p in files),encoding='utf-8',newline='\n')
 dest=ROOT/'site/downloads';dest.mkdir(exist_ok=True)
 with zipfile.ZipFile(dest/'narrate-video.zip','w',zipfile.ZIP_DEFLATED,compresslevel=9)as out:
- for p in sorted(files+[skill/'FILES.sha256']):
+ for p in sorted(files+[skill/'FILES.sha256'],key=order):
   info=zipfile.ZipInfo((Path('narrate-video')/p.relative_to(skill)).as_posix(),date_time=(1980,1,1,0,0,0))
   info.compress_type=zipfile.ZIP_DEFLATED;info.create_system=3
   info.external_attr=(0o100755 if executable(p) else 0o100644)<<16
